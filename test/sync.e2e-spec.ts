@@ -30,13 +30,23 @@ describe('Sync (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
-    await new Promise(resolve => mockServer.close(resolve));
+    await new Promise((resolve) => mockServer.close(resolve));
   });
 
   it('should reject batch without correct secret', () => {
     return request(app.getHttpServer())
       .post('/hcm/batch')
-      .send({ updates: [{ employeeId: 'clean-emp', locationId: 'loc1', leaveType: 'annual', balance: 15, hcmVersion: 'v2' }] })
+      .send({
+        updates: [
+          {
+            employeeId: 'clean-emp',
+            locationId: 'loc1',
+            leaveType: 'annual',
+            balance: 15,
+            hcmVersion: 'v2',
+          },
+        ],
+      })
       .expect(401);
   });
 
@@ -59,9 +69,21 @@ describe('Sync (e2e)', () => {
       .set('x-hcm-secret', 'test-secret')
       .send({
         updates: [
-          { employeeId: 'clean-emp', locationId: 'loc1', leaveType: 'annual', balance: 15, hcmVersion: 'v2' },
-          { employeeId: 'other-emp', locationId: 'loc1', leaveType: 'annual', balance: 5, hcmVersion: 'v2' }
-        ]
+          {
+            employeeId: 'clean-emp',
+            locationId: 'loc1',
+            leaveType: 'annual',
+            balance: 15,
+            hcmVersion: 'v2',
+          },
+          {
+            employeeId: 'other-emp',
+            locationId: 'loc1',
+            leaveType: 'annual',
+            balance: 5,
+            hcmVersion: 'v2',
+          },
+        ],
       })
       .expect(201)
       .expect((res) => {

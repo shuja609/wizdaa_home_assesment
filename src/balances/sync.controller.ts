@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, UnauthorizedException, Headers, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UnauthorizedException,
+  Headers,
+  UseGuards,
+} from '@nestjs/common';
 import { BalancesService } from './balances.service';
 import { HcmBatchDto } from '../hcm/dto/hcm-batch.dto';
 import { ConfigService } from '@nestjs/config';
@@ -41,4 +49,3 @@ export class SyncController {
     return { recentLogs: logs };
   }
 }
-

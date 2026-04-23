@@ -5,7 +5,10 @@ import { Balance } from '../database/entities/balance.entity';
 import { HcmAdapter } from '../hcm/hcm.adapter';
 import { ConfigService } from '@nestjs/config';
 
-import { TimeOffRequest, RequestStatus } from '../database/entities/time-off-request.entity';
+import {
+  TimeOffRequest,
+  RequestStatus,
+} from '../database/entities/time-off-request.entity';
 import { SyncLog } from '../database/entities/sync-log.entity';
 
 describe('BalancesService', () => {
@@ -68,11 +71,13 @@ describe('BalancesService', () => {
 
   it('should fetch from HCM on cache miss', async () => {
     repo.find.mockResolvedValue([]);
-    adapter.getBalance.mockResolvedValue([{ leaveType: 'annual', balance: 10, hcmVersion: 'v1' }]);
+    adapter.getBalance.mockResolvedValue([
+      { leaveType: 'annual', balance: 10, hcmVersion: 'v1' },
+    ]);
     repo.save.mockResolvedValue({ id: 1 });
 
     const result = await service.getBalances('e1', 'l1');
-    
+
     expect(adapter.getBalance).toHaveBeenCalled();
     expect(repo.save).toHaveBeenCalled();
     expect(result).toHaveLength(1);
@@ -95,13 +100,26 @@ describe('BalancesService', () => {
     it('should flag pending requests rather than overwriting balance', async () => {
       const batchDto = {
         updates: [
-          { employeeId: 'e1', locationId: 'l1', leaveType: 'annual', balance: 5, hcmVersion: 'v2' }
-        ]
+          {
+            employeeId: 'e1',
+            locationId: 'l1',
+            leaveType: 'annual',
+            balance: 5,
+            hcmVersion: 'v2',
+          },
+        ],
       };
       // Local diff exists
-      repo.findOne.mockResolvedValue({ employeeId: 'e1', locationId: 'l1', leaveType: 'annual', balance: 10 }); 
+      repo.findOne.mockResolvedValue({
+        employeeId: 'e1',
+        locationId: 'l1',
+        leaveType: 'annual',
+        balance: 10,
+      });
       // Conflict! PENDING request exists
-      requestRepo.find.mockResolvedValue([{ id: 'req1', status: RequestStatus.PENDING }]); 
+      requestRepo.find.mockResolvedValue([
+        { id: 'req1', status: RequestStatus.PENDING },
+      ]);
 
       const result = await service.processBatchUpdate(batchDto);
 
@@ -114,13 +132,24 @@ describe('BalancesService', () => {
     it('should update balance if no pending conflicts', async () => {
       const batchDto = {
         updates: [
-          { employeeId: 'e1', locationId: 'l1', leaveType: 'annual', balance: 5, hcmVersion: 'v2' }
-        ]
+          {
+            employeeId: 'e1',
+            locationId: 'l1',
+            leaveType: 'annual',
+            balance: 5,
+            hcmVersion: 'v2',
+          },
+        ],
       };
       // Local diff exists
-      repo.findOne.mockResolvedValue({ employeeId: 'e1', locationId: 'l1', leaveType: 'annual', balance: 10 }); 
+      repo.findOne.mockResolvedValue({
+        employeeId: 'e1',
+        locationId: 'l1',
+        leaveType: 'annual',
+        balance: 10,
+      });
       // No Conflict
-      requestRepo.find.mockResolvedValue([]); 
+      requestRepo.find.mockResolvedValue([]);
 
       const result = await service.processBatchUpdate(batchDto);
 

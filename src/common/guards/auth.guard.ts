@@ -13,27 +13,32 @@ export const ROLES_KEY = 'roles';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) {}
+  constructor(
+    private jwtService: JwtService,
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    
+
     if (!token) {
       throw new UnauthorizedException();
     }
-    
+
     try {
       const payload = await this.jwtService.verifyAsync(token);
       request['user'] = payload; // { sub: 'employeeId', role: 'employee' | 'manager' }
 
-      const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+      const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+        ROLES_KEY,
+        [context.getHandler(), context.getClass()],
+      );
 
       if (requiredRoles && !requiredRoles.includes(payload.role)) {
-        throw new ForbiddenException(`Requires one of roles: ${requiredRoles.join(', ')}`);
+        throw new ForbiddenException(
+          `Requires one of roles: ${requiredRoles.join(', ')}`,
+        );
       }
     } catch (err: any) {
       if (err instanceof ForbiddenException) throw err;

@@ -1,0 +1,218 @@
+
+> wizdaa_home_assesment@0.0.1 lint
+> eslint "{src,apps,libs,test}/**/*.ts" --fix
+
+
+E:\Work\shuja\wizdaa_home_assesment\src\app.module.ts
+  41:7  error  Async method 'useFactory' has no 'await' expression  @typescript-eslint/require-await
+
+E:\Work\shuja\wizdaa_home_assesment\src\balances\balances.controller.ts
+  26:13  error  Unsafe member access .user on an `any` value  @typescript-eslint/no-unsafe-member-access
+  26:60  error  Unsafe member access .user on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\balances\balances.service.spec.ts
+   26:51  error  Unsafe return of a value of type `any`              @typescript-eslint/no-unsafe-return
+   35:51  error  Unsafe return of a value of type `any`              @typescript-eslint/no-unsafe-return
+   48:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   52:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   56:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   60:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   73:5   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+   73:10  error  Unsafe member access .find on an `any` value        @typescript-eslint/no-unsafe-member-access
+   74:5   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+   74:13  error  Unsafe member access .getBalance on an `any` value  @typescript-eslint/no-unsafe-member-access
+   77:5   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+   77:10  error  Unsafe member access .save on an `any` value        @typescript-eslint/no-unsafe-member-access
+   81:20  error  Unsafe member access .getBalance on an `any` value  @typescript-eslint/no-unsafe-member-access
+   82:17  error  Unsafe member access .save on an `any` value        @typescript-eslint/no-unsafe-member-access
+   91:5   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+   91:10  error  Unsafe member access .find on an `any` value        @typescript-eslint/no-unsafe-member-access
+   95:20  error  Unsafe member access .getBalance on an `any` value  @typescript-eslint/no-unsafe-member-access
+  113:7   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+  113:12  error  Unsafe member access .findOne on an `any` value     @typescript-eslint/no-unsafe-member-access
+  120:7   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+  120:19  error  Unsafe member access .find on an `any` value        @typescript-eslint/no-unsafe-member-access
+  128:26  error  Unsafe member access .save on an `any` value        @typescript-eslint/no-unsafe-member-access
+  129:19  error  Unsafe member access .update on an `any` value      @typescript-eslint/no-unsafe-member-access
+  145:7   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+  145:12  error  Unsafe member access .findOne on an `any` value     @typescript-eslint/no-unsafe-member-access
+  152:7   error  Unsafe call of an `any` typed value                 @typescript-eslint/no-unsafe-call
+  152:19  error  Unsafe member access .find on an `any` value        @typescript-eslint/no-unsafe-member-access
+  158:19  error  Unsafe member access .update on an `any` value      @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\balances\balances.service.ts
+    3:22  error  'In' is defined but never used                      @typescript-eslint/no-unused-vars
+   78:42  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   78:56  error  Unsafe member access .leaveType on an `any` value   @typescript-eslint/no-unsafe-member-access
+   85:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   85:25  error  Unsafe member access .leaveType on an `any` value   @typescript-eslint/no-unsafe-member-access
+   89:7   error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   89:28  error  Unsafe member access .balance on an `any` value     @typescript-eslint/no-unsafe-member-access
+   90:7   error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+   90:31  error  Unsafe member access .hcmVersion on an `any` value  @typescript-eslint/no-unsafe-member-access
+  111:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  117:16  error  Unsafe member access .success on an `any` value     @typescript-eslint/no-unsafe-member-access
+  121:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  121:27  error  Unsafe member access .newBalance on an `any` value  @typescript-eslint/no-unsafe-member-access
+  126:5   error  Unsafe return of a value of type `any`              @typescript-eslint/no-unsafe-return
+  135:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  141:16  error  Unsafe member access .success on an `any` value     @typescript-eslint/no-unsafe-member-access
+  145:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  145:27  error  Unsafe member access .newBalance on an `any` value  @typescript-eslint/no-unsafe-member-access
+  150:5   error  Unsafe return of a value of type `any`              @typescript-eslint/no-unsafe-return
+
+E:\Work\shuja\wizdaa_home_assesment\src\balances\sync.service.ts
+  43:15  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  44:20  error  Unsafe member access .leaveType on an `any` value   @typescript-eslint/no-unsafe-member-access
+  47:44  error  Unsafe member access .balance on an `any` value     @typescript-eslint/no-unsafe-member-access
+  52:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  52:41  error  Unsafe member access .balance on an `any` value     @typescript-eslint/no-unsafe-member-access
+  53:11  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  53:44  error  Unsafe member access .hcmVersion on an `any` value  @typescript-eslint/no-unsafe-member-access
+  66:53  error  Unsafe member access .balance on an `any` value     @typescript-eslint/no-unsafe-member-access
+  68:17  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  68:42  error  Unsafe member access .balance on an `any` value     @typescript-eslint/no-unsafe-member-access
+  75:69  error  Unsafe member access .message on an `any` value     @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\common\guards\auth.guard.ts
+  22:11  error    Unsafe assignment of an `any` value                                                                                                 @typescript-eslint/no-unsafe-assignment
+  23:47  warning  Unsafe argument of type `any` assigned to a parameter of type `Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>`  @typescript-eslint/no-unsafe-argument
+  30:13  error    Unsafe assignment of an `any` value                                                                                                 @typescript-eslint/no-unsafe-assignment
+  31:7   error    Unsafe assignment of an `any` value                                                                                                 @typescript-eslint/no-unsafe-assignment
+  31:15  error    Unsafe member access ['user'] on an `any` value                                                                                     @typescript-eslint/no-unsafe-member-access
+  38:52  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                              @typescript-eslint/no-unsafe-argument
+  38:60  error    Unsafe member access .role on an `any` value                                                                                        @typescript-eslint/no-unsafe-member-access
+  45:52  error    Unsafe member access .message on an `any` value                                                                                     @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\common\guards\employee-throttler.guard.ts
+   1:22  error  'ExecutionContext' is defined but never used         @typescript-eslint/no-unused-vars
+   6:3   error  Async method 'getTracker' has no 'await' expression  @typescript-eslint/require-await
+   7:30  error  Unsafe member access .sub on an `any` value          @typescript-eslint/no-unsafe-member-access
+   8:7   error  Unsafe return of a value of type `any`               @typescript-eslint/no-unsafe-return
+   8:23  error  Unsafe member access .sub on an `any` value          @typescript-eslint/no-unsafe-member-access
+  10:5   error  Unsafe return of a value of type `any`               @typescript-eslint/no-unsafe-return
+  10:20  error  Unsafe member access .length on an `any` value       @typescript-eslint/no-unsafe-member-access
+  10:37  error  Unsafe member access [0] on an `any` value           @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\hcm\hcm.adapter.ts
+  24:41  warning  Unsafe argument of type `any` assigned to a parameter of type `RequestInit | undefined`  @typescript-eslint/no-unsafe-argument
+  32:15  error    Unsafe member access .name on an `any` value                                             @typescript-eslint/no-unsafe-member-access
+  36:40  error    Unsafe member access .message on an `any` value                                          @typescript-eslint/no-unsafe-member-access
+  53:15  error    Unsafe assignment of an `any` value                                                      @typescript-eslint/no-unsafe-assignment
+  54:22  warning  Unsafe argument of type `any` assigned to a parameter of type `never`                    @typescript-eslint/no-unsafe-argument
+  75:11  error    Unsafe assignment of an `any` value                                                      @typescript-eslint/no-unsafe-assignment
+  76:26  error    Unsafe member access .success on an `any` value                                          @typescript-eslint/no-unsafe-member-access
+  77:32  error    Unsafe assignment of an `any` value                                                      @typescript-eslint/no-unsafe-assignment
+  77:44  error    Unsafe member access .error on an `any` value                                            @typescript-eslint/no-unsafe-member-access
+  97:11  error    Unsafe assignment of an `any` value                                                      @typescript-eslint/no-unsafe-assignment
+  98:26  error    Unsafe member access .success on an `any` value                                          @typescript-eslint/no-unsafe-member-access
+  99:32  error    Unsafe assignment of an `any` value                                                      @typescript-eslint/no-unsafe-assignment
+  99:44  error    Unsafe member access .error on an `any` value                                            @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\main.ts
+  12:1  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+
+E:\Work\shuja\wizdaa_home_assesment\src\requests\requests.controller.ts
+  34:45  error  Unsafe member access .user on an `any` value  @typescript-eslint/no-unsafe-member-access
+  49:13  error  Unsafe member access .user on an `any` value  @typescript-eslint/no-unsafe-member-access
+  49:60  error  Unsafe member access .user on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\requests\requests.service.spec.ts
+   18:51  error  Unsafe return of a value of type `any`                @typescript-eslint/no-unsafe-return
+   37:11  error  Unsafe assignment of an `any` value                   @typescript-eslint/no-unsafe-assignment
+   41:11  error  Unsafe assignment of an `any` value                   @typescript-eslint/no-unsafe-assignment
+   59:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+   59:23  error  Unsafe member access .getBalances on an `any` value   @typescript-eslint/no-unsafe-member-access
+   67:19  error  Unsafe member access .save on an `any` value          @typescript-eslint/no-unsafe-member-access
+   71:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+   71:23  error  Unsafe member access .getBalances on an `any` value   @typescript-eslint/no-unsafe-member-access
+  101:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+  101:12  error  Unsafe member access .findOne on an `any` value       @typescript-eslint/no-unsafe-member-access
+  102:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+  102:23  error  Unsafe member access .syncBalances on an `any` value  @typescript-eslint/no-unsafe-member-access
+  105:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+  105:23  error  Unsafe member access .debitHcm on an `any` value      @typescript-eslint/no-unsafe-member-access
+  113:30  error  Unsafe member access .debitHcm on an `any` value      @typescript-eslint/no-unsafe-member-access
+  122:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+  122:12  error  Unsafe member access .findOne on an `any` value       @typescript-eslint/no-unsafe-member-access
+  139:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+  139:12  error  Unsafe member access .findOne on an `any` value       @typescript-eslint/no-unsafe-member-access
+  140:7   error  Unsafe call of an `any` typed value                   @typescript-eslint/no-unsafe-call
+  140:23  error  Unsafe member access .creditHcm on an `any` value     @typescript-eslint/no-unsafe-member-access
+  145:30  error  Unsafe member access .creditHcm on an `any` value     @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\src\requests\requests.service.ts
+   64:27  error  Unsafe member access .employeeId on an `any` value  @typescript-eslint/no-unsafe-member-access
+   65:23  error  Unsafe member access .status on an `any` value      @typescript-eslint/no-unsafe-member-access
+   68:7   error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  105:13  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  112:21  error  Unsafe member access .success on an `any` value     @typescript-eslint/no-unsafe-member-access
+  122:7   error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  122:32  error  Unsafe member access .message on an `any` value     @typescript-eslint/no-unsafe-member-access
+  171:15  error  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  178:24  error  Unsafe member access .success on an `any` value     @typescript-eslint/no-unsafe-member-access
+  186:65  error  Unsafe member access .message on an `any` value     @typescript-eslint/no-unsafe-member-access
+
+E:\Work\shuja\wizdaa_home_assesment\test\adversarial.e2e-spec.ts
+  13:7   error    'mgrToken' is assigned a value but never used                        @typescript-eslint/no-unused-vars
+  17:5   error    Unsafe assignment of an error typed value                            @typescript-eslint/no-unsafe-assignment
+  17:18  error    Unsafe call of a type that could not be resolved                     @typescript-eslint/no-unsafe-call
+  17:29  error    Unsafe member access .listen on a type that cannot be resolved       @typescript-eslint/no-unsafe-member-access
+  35:36  error    Unsafe return of a value of type `any`                               @typescript-eslint/no-unsafe-return
+  35:36  error    Unsafe call of an `any` typed value                                  @typescript-eslint/no-unsafe-call
+  35:47  error    Unsafe member access .close on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  40:19  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  44:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  51:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  66:31  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  78:11  error    Unsafe assignment of an `any` value                                  @typescript-eslint/no-unsafe-assignment
+  78:28  error    Unsafe member access .id on an `any` value                           @typescript-eslint/no-unsafe-member-access
+  81:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  90:19  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  93:34  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+
+E:\Work\shuja\wizdaa_home_assesment\test\app.e2e-spec.ts
+  23:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+
+E:\Work\shuja\wizdaa_home_assesment\test\balances.e2e-spec.ts
+  14:5   error    Unsafe assignment of an error typed value                            @typescript-eslint/no-unsafe-assignment
+  14:18  error    Unsafe call of a type that could not be resolved                     @typescript-eslint/no-unsafe-call
+  14:29  error    Unsafe member access .listen on a type that cannot be resolved       @typescript-eslint/no-unsafe-member-access
+  30:36  error    Unsafe return of a value of type `any`                               @typescript-eslint/no-unsafe-return
+  30:36  error    Unsafe call of an `any` typed value                                  @typescript-eslint/no-unsafe-call
+  30:47  error    Unsafe member access .close on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  34:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  41:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+
+E:\Work\shuja\wizdaa_home_assesment\test\requests.e2e-spec.ts
+  16:5   error    Unsafe assignment of an error typed value                            @typescript-eslint/no-unsafe-assignment
+  16:18  error    Unsafe call of a type that could not be resolved                     @typescript-eslint/no-unsafe-call
+  16:29  error    Unsafe member access .listen on a type that cannot be resolved       @typescript-eslint/no-unsafe-member-access
+  34:36  error    Unsafe return of a value of type `any`                               @typescript-eslint/no-unsafe-return
+  34:36  error    Unsafe call of an `any` typed value                                  @typescript-eslint/no-unsafe-call
+  34:47  error    Unsafe member access .close on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  38:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  52:31  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  64:5   error    Unsafe assignment of an `any` value                                  @typescript-eslint/no-unsafe-assignment
+  64:22  error    Unsafe member access .id on an `any` value                           @typescript-eslint/no-unsafe-member-access
+  68:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  76:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+
+E:\Work\shuja\wizdaa_home_assesment\test\sync.e2e-spec.ts
+   15:5   error    Unsafe assignment of an error typed value                            @typescript-eslint/no-unsafe-assignment
+   15:18  error    Unsafe call of a type that could not be resolved                     @typescript-eslint/no-unsafe-call
+   15:29  error    Unsafe member access .listen on a type that cannot be resolved       @typescript-eslint/no-unsafe-member-access
+   33:36  error    Unsafe return of a value of type `any`                               @typescript-eslint/no-unsafe-return
+   33:36  error    Unsafe call of an `any` typed value                                  @typescript-eslint/no-unsafe-call
+   33:47  error    Unsafe member access .close on an `any` value                        @typescript-eslint/no-unsafe-member-access
+   37:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+   56:19  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+   67:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+   90:25  error    Unsafe member access .processed on an `any` value                    @typescript-eslint/no-unsafe-member-access
+   95:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  102:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
+  107:25  error    Unsafe member access .recentLogs on an `any` value                   @typescript-eslint/no-unsafe-member-access
+  108:39  error    Unsafe member access .recentLogs on an `any` value                   @typescript-eslint/no-unsafe-member-access
+
+✖ 177 problems (153 errors, 24 warnings)
+

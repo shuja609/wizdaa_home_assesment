@@ -31,7 +31,7 @@ describe('Requests (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
-    await new Promise(resolve => mockServer.close(resolve));
+    await new Promise((resolve) => mockServer.close(resolve));
   });
 
   it('/requests (POST) - invalid balance', () => {
@@ -43,7 +43,7 @@ describe('Requests (e2e)', () => {
         locationId: 'l1',
         leaveType: 'annual',
         startDate: '2026-06-01',
-        endDate: '2026-06-30' // too many days
+        endDate: '2026-06-30', // too many days
       })
       .expect(400);
   });
@@ -57,9 +57,9 @@ describe('Requests (e2e)', () => {
         locationId: 'l1',
         leaveType: 'annual',
         startDate: '2026-06-01',
-        endDate: '2026-06-02'
+        endDate: '2026-06-02',
       });
-    
+
     expect(res.status).toBe(201);
     reqId = res.body.id;
   });

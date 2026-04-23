@@ -1,4 +1,15 @@
-import { Controller, Post, Body, Get, Query, Param, Patch, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  Param,
+  Patch,
+  UseGuards,
+  Request,
+  ForbiddenException,
+} from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { RequestStatus } from '../database/entities/time-off-request.entity';
@@ -16,9 +27,14 @@ export class RequestsController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Roles('employee')
   @Post()
-  async create(@Body() createRequestDto: CreateRequestDto, @Request() req: any) {
+  async create(
+    @Body() createRequestDto: CreateRequestDto,
+    @Request() req: any,
+  ) {
     if (createRequestDto.employeeId !== req.user.sub) {
-      throw new ForbiddenException('Cannot submit request for another employee');
+      throw new ForbiddenException(
+        'Cannot submit request for another employee',
+      );
     }
     return this.requestsService.createRequest(createRequestDto);
   }
@@ -28,10 +44,12 @@ export class RequestsController {
   async findAll(
     @Query('employeeId') employeeId?: string,
     @Query('status') status?: RequestStatus,
-    @Request() req?: any
+    @Request() req?: any,
   ) {
     if (req.user.role === 'employee' && employeeId !== req.user.sub) {
-      throw new ForbiddenException('Employees can only list their own requests');
+      throw new ForbiddenException(
+        'Employees can only list their own requests',
+      );
     }
     return this.requestsService.findAll(employeeId, status);
   }
@@ -61,4 +79,3 @@ export class RequestsController {
     return this.requestsService.cancelRequest(id);
   }
 }
-

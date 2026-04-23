@@ -17,12 +17,15 @@ describe('HcmAdapter', () => {
     }).compile();
 
     adapter = module.get<HcmAdapter>(HcmAdapter);
-    
+
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve([{ leaveType: 'annual', balance: 10, hcmVersion: 'v1' }]),
-      })
+        json: () =>
+          Promise.resolve([
+            { leaveType: 'annual', balance: 10, hcmVersion: 'v1' },
+          ]),
+      }),
     ) as jest.Mock;
   });
 

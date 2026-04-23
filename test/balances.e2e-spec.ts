@@ -13,7 +13,7 @@ describe('Balances (e2e)', () => {
   beforeAll(async () => {
     mockServer = mockHcmApp.listen(3002);
     process.env.HCM_API_URL = 'http://localhost:3002';
-    
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -27,7 +27,7 @@ describe('Balances (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
-    await new Promise(resolve => mockServer.close(resolve));
+    await new Promise((resolve) => mockServer.close(resolve));
   });
 
   it('/balances/:employeeId/:locationId (GET)', () => {

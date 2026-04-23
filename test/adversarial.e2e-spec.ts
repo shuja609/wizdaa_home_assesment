@@ -10,7 +10,6 @@ describe('Adversarial & Security (e2e)', () => {
   let mockServer: any;
   let jwtService: JwtService;
   let empToken: string;
-  let mgrToken: string;
 
   beforeAll(async () => {
     // Start Mock Server
@@ -24,15 +23,14 @@ describe('Adversarial & Security (e2e)', () => {
     await app.init();
 
     jwtService = moduleFixture.get<JwtService>(JwtService);
-    
+
     // Generate valid tokens
     empToken = jwtService.sign({ sub: 'emp-hacker', role: 'employee' });
-    mgrToken = jwtService.sign({ sub: 'mgr-1', role: 'manager' });
   });
 
   afterAll(async () => {
     await app.close();
-    await new Promise(resolve => mockServer.close(resolve));
+    await new Promise((resolve) => mockServer.close(resolve));
   });
 
   beforeEach(async () => {
@@ -56,7 +54,7 @@ describe('Adversarial & Security (e2e)', () => {
         locationId: 'loc1',
         leaveType: 'annual',
         startDate: '2026-06-01',
-        endDate: '2026-06-02'
+        endDate: '2026-06-02',
       })
       .expect(403);
   });
@@ -71,7 +69,7 @@ describe('Adversarial & Security (e2e)', () => {
         locationId: 'loc1',
         leaveType: 'annual', // Auto-seeded to 10 by Mock server
         startDate: '2026-06-01',
-        endDate: '2026-06-01'
+        endDate: '2026-06-01',
       })
       .expect(201);
 
@@ -98,9 +96,9 @@ describe('Adversarial & Security (e2e)', () => {
         locationId: 'loc1',
         leaveType: 'annual',
         startDate: '2026-06-01',
-        endDate: '2026-06-25' // ~18 working days, which is > 10
+        endDate: '2026-06-25', // ~18 working days, which is > 10
       });
-    
+
     // Should fail local check before even caring if HCM lies
     expect(reqRes.status).toBe(400);
   });

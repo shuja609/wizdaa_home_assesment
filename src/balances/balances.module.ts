@@ -19,4 +19,3 @@ import { HcmModule } from '../hcm/hcm.module';
   exports: [BalancesService],
 })
 export class BalancesModule {}
-

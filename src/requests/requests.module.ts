@@ -6,10 +6,7 @@ import { RequestsController } from './requests.controller';
 import { BalancesModule } from '../balances/balances.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([TimeOffRequest]),
-    BalancesModule,
-  ],
+  imports: [TypeOrmModule.forFeature([TimeOffRequest]), BalancesModule],
   controllers: [RequestsController],
   providers: [RequestsService],
   exports: [RequestsService],

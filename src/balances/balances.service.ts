@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Balance } from '../database/entities/balance.entity';
-import { TimeOffRequest, RequestStatus } from '../database/entities/time-off-request.entity';
+import {
+  TimeOffRequest,
+  RequestStatus,
+} from '../database/entities/time-off-request.entity';
 import { SyncLog, SyncLogType } from '../database/entities/sync-log.entity';
 import { HcmAdapter } from '../hcm/hcm.adapter';
 import { ConfigService } from '@nestjs/config';
@@ -23,23 +26,31 @@ export class BalancesService {
     private readonly hcmAdapter: HcmAdapter,
     private readonly configService: ConfigService,
   ) {
-    this.syncThresholdMin = this.configService.get<number>('HCM_SYNC_THRESHOLD_MIN', 5);
+    this.syncThresholdMin = this.configService.get<number>(
+      'HCM_SYNC_THRESHOLD_MIN',
+      5,
+    );
   }
-
 
   /**
    * Gets all balances for an employee at a location.
    * Checks local cache first; syncs from HCM if stale or missing.
    */
-  async getBalances(employeeId: string, locationId: string): Promise<Balance[]> {
+  async getBalances(
+    employeeId: string,
+    locationId: string,
+  ): Promise<Balance[]> {
     const localBalances = await this.balanceRepository.find({
       where: { employeeId, locationId },
     });
 
-    const isStale = localBalances.length === 0 || this.isStale(localBalances[0]);
+    const isStale =
+      localBalances.length === 0 || this.isStale(localBalances[0]);
 
     if (isStale) {
-      this.logger.log(`Cache miss or stale for ${employeeId}. Syncing from HCM...`);
+      this.logger.log(
+        `Cache miss or stale for ${employeeId}. Syncing from HCM...`,
+      );
       return this.syncBalances(employeeId, locationId);
     }
 
@@ -50,9 +61,15 @@ export class BalancesService {
   /**
    * Forces a synchronization with the HCM system.
    */
-  async syncBalances(employeeId: string, locationId: string): Promise<Balance[]> {
-    const hcmBalances = await this.hcmAdapter.getBalance(employeeId, locationId);
-    
+  async syncBalances(
+    employeeId: string,
+    locationId: string,
+  ): Promise<Balance[]> {
+    const hcmBalances = await this.hcmAdapter.getBalance(
+      employeeId,
+      locationId,
+    );
+
     const now = new Date();
     const updatedBalances: Balance[] = [];
 
@@ -85,29 +102,49 @@ export class BalancesService {
     return timeSinceSync > thresholdMs;
   }
 
-  async debitHcm(employeeId: string, locationId: string, leaveType: string, days: number) {
-    const result = await this.hcmAdapter.debitBalance(employeeId, locationId, leaveType, days);
+  async debitHcm(
+    employeeId: string,
+    locationId: string,
+    leaveType: string,
+    days: number,
+  ) {
+    const result = await this.hcmAdapter.debitBalance(
+      employeeId,
+      locationId,
+      leaveType,
+      days,
+    );
     if (result.success) {
       await this.balanceRepository.update(
         { employeeId, locationId, leaveType },
-        { 
+        {
           balance: result.newBalance,
           lastSyncedAt: new Date(),
-        }
+        },
       );
     }
     return result;
   }
 
-  async creditHcm(employeeId: string, locationId: string, leaveType: string, days: number) {
-    const result = await this.hcmAdapter.creditBalance(employeeId, locationId, leaveType, days);
+  async creditHcm(
+    employeeId: string,
+    locationId: string,
+    leaveType: string,
+    days: number,
+  ) {
+    const result = await this.hcmAdapter.creditBalance(
+      employeeId,
+      locationId,
+      leaveType,
+      days,
+    );
     if (result.success) {
       await this.balanceRepository.update(
         { employeeId, locationId, leaveType },
-        { 
+        {
           balance: result.newBalance,
           lastSyncedAt: new Date(),
-        }
+        },
       );
     }
     return result;
@@ -130,10 +167,12 @@ export class BalancesService {
 
       // If missing locally, just insert it
       if (!localBalance) {
-        await this.balanceRepository.save(this.balanceRepository.create({
-          ...update,
-          lastSyncedAt: now,
-        }));
+        await this.balanceRepository.save(
+          this.balanceRepository.create({
+            ...update,
+            lastSyncedAt: now,
+          }),
+        );
         updated++;
         continue;
       }
@@ -142,8 +181,12 @@ export class BalancesService {
       if (localBalance.balance === update.balance) {
         // Just update the version and timestamp
         await this.balanceRepository.update(
-          { employeeId: update.employeeId, locationId: update.locationId, leaveType: update.leaveType },
-          { lastSyncedAt: now, hcmVersion: update.hcmVersion }
+          {
+            employeeId: update.employeeId,
+            locationId: update.locationId,
+            leaveType: update.leaveType,
+          },
+          { lastSyncedAt: now, hcmVersion: update.hcmVersion },
         );
         continue;
       }
@@ -168,20 +211,34 @@ export class BalancesService {
       } else {
         // Safe to update
         await this.balanceRepository.update(
-          { employeeId: update.employeeId, locationId: update.locationId, leaveType: update.leaveType },
-          { balance: update.balance, lastSyncedAt: now, hcmVersion: update.hcmVersion }
+          {
+            employeeId: update.employeeId,
+            locationId: update.locationId,
+            leaveType: update.leaveType,
+          },
+          {
+            balance: update.balance,
+            lastSyncedAt: now,
+            hcmVersion: update.hcmVersion,
+          },
         );
         updated++;
       }
     }
 
     // 3. Log the batch sync event
-    await this.syncLogRepository.save(this.syncLogRepository.create({
-      type: SyncLogType.BATCH,
-      triggeredBy: 'webhook',
-      status: 'SUCCESS',
-      detail: JSON.stringify({ processed: batchDto.updates.length, updated, conflicts }),
-    }));
+    await this.syncLogRepository.save(
+      this.syncLogRepository.create({
+        type: SyncLogType.BATCH,
+        triggeredBy: 'webhook',
+        status: 'SUCCESS',
+        detail: JSON.stringify({
+          processed: batchDto.updates.length,
+          updated,
+          conflicts,
+        }),
+      }),
+    );
 
     return { processed: batchDto.updates.length, updated, conflicts };
   }

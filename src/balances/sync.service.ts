@@ -23,7 +23,7 @@ export class SyncService {
   @Cron(CronExpression.EVERY_HOUR)
   async handleDriftDetection() {
     this.logger.log('Starting scheduled drift detection...');
-    
+
     // In a massive system, we'd chunk this. For this sample, we process all active locals.
     const allLocalBalances = await this.balanceRepository.find();
     let driftCount = 0;
@@ -35,14 +35,19 @@ export class SyncService {
         // So calling syncBalances will implicitly correct the drift.
         // But we want to know IF there was a drift so we can log it.
         // Let's refactor slightly: we'll fetch from HCM adapter first.
-        const hcmBalances = await this.balancesService['hcmAdapter'].getBalance(local.employeeId, local.locationId);
-        
-        const hcmEquivalent = hcmBalances.find(b => b.leaveType === local.leaveType);
-        
+        const hcmBalances = await this.balancesService['hcmAdapter'].getBalance(
+          local.employeeId,
+          local.locationId,
+        );
+
+        const hcmEquivalent = hcmBalances.find(
+          (b) => b.leaveType === local.leaveType,
+        );
+
         if (hcmEquivalent && hcmEquivalent.balance !== local.balance) {
           driftCount++;
           const previousBalance = local.balance;
-          
+
           // Auto-correct
           local.balance = hcmEquivalent.balance;
           local.hcmVersion = hcmEquivalent.hcmVersion;
@@ -50,24 +55,30 @@ export class SyncService {
           await this.balanceRepository.save(local);
 
           // Log drift exclusively
-          await this.syncLogRepository.save(this.syncLogRepository.create({
-            type: SyncLogType.DRIFT_CORRECT,
-            triggeredBy: 'scheduled',
-            status: 'SUCCESS',
-            detail: JSON.stringify({
-              employeeId: local.employeeId,
-              leaveType: local.leaveType,
-              driftAmount: Math.abs(hcmEquivalent.balance - previousBalance),
-              previous: previousBalance,
-              corrected: hcmEquivalent.balance,
+          await this.syncLogRepository.save(
+            this.syncLogRepository.create({
+              type: SyncLogType.DRIFT_CORRECT,
+              triggeredBy: 'scheduled',
+              status: 'SUCCESS',
+              detail: JSON.stringify({
+                employeeId: local.employeeId,
+                leaveType: local.leaveType,
+                driftAmount: Math.abs(hcmEquivalent.balance - previousBalance),
+                previous: previousBalance,
+                corrected: hcmEquivalent.balance,
+              }),
             }),
-          }));
+          );
         }
       } catch (error) {
-        this.logger.error(`Failed to analyze drift for ${local.employeeId}: ${error.message}`);
+        this.logger.error(
+          `Failed to analyze drift for ${local.employeeId}: ${error.message}`,
+        );
       }
     }
 
-    this.logger.log(`Drift detection complete. Corrected ${driftCount} anomalies.`);
+    this.logger.log(
+      `Drift detection complete. Corrected ${driftCount} anomalies.`,
+    );
   }
 }
