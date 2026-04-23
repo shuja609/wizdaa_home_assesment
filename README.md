@@ -59,6 +59,15 @@ npm run test:e2e
 npm run test:cov
 ```
 
+### Code Quality
+```bash
+# run eslint to check static code quality
+npm run lint
+
+# run typescript compiler checks without building
+npx tsc --noEmit
+```
+
 ## 📂 Project Structure
 - `src/database/entities`: TypeORM entities for `Balance`, `TimeOffRequest`, and `SyncLog`.
 - `src/hcm`: HCM Adapter and integration logic (Upcoming).
