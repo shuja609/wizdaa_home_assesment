@@ -45,7 +45,7 @@ describe('Requests (e2e)', () => {
         startDate: '2026-06-01',
         endDate: '2026-06-30' // too many days
       })
-      .expect(422);
+      .expect(400);
   });
 
   it('/requests (POST) - valid request', async () => {
