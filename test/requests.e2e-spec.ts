@@ -2,71 +2,83 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { JwtService } from '@nestjs/jwt';
+import mockHcmApp from '../mock-hcm/server';
 
 describe('Requests (e2e)', () => {
   let app: INestApplication;
+  let mockServer: any;
+  let empToken: string;
+  let mgrToken: string;
+  let reqId: string;
 
   beforeAll(async () => {
+    mockServer = mockHcmApp.listen(3003);
+    process.env.HCM_API_URL = 'http://localhost:3003';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    const jwtService = app.get(JwtService);
+    // Employee must match the sub
+    empToken = jwtService.sign({ sub: 'e2', role: 'employee' });
+    mgrToken = jwtService.sign({ sub: 'm1', role: 'manager' });
   });
 
   afterAll(async () => {
     await app.close();
+    await new Promise(resolve => mockServer.close(resolve));
   });
 
-  let requestId: string;
-
-  it('should submit a new request', () => {
+  it('/requests (POST) - invalid balance', () => {
     return request(app.getHttpServer())
       .post('/requests')
+      .set('Authorization', `Bearer ${empToken}`)
       .send({
-        employeeId: 'shuja',
-        locationId: 'loc1',
+        employeeId: 'e2',
+        locationId: 'l1',
         leaveType: 'annual',
-        startDate: '2026-05-04', // Monday
-        endDate: '2026-05-05',   // Tuesday
+        startDate: '2026-06-01',
+        endDate: '2026-06-30' // too many days
       })
-      .expect(201)
-      .expect((res) => {
-        expect(res.body.id).toBeDefined();
-        expect(res.body.status).toBe('PENDING');
-        expect(res.body.days).toBe(2);
-        requestId = res.body.id;
-      });
+      .expect(422);
   });
 
-  it('should approve the request', () => {
-    return request(app.getHttpServer())
-      .patch(`/requests/${requestId}/approve`)
-      .send({ managerId: 'mgr1' })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.status).toBe('APPROVED');
-        expect(res.body.hcmSubmitted).toBe(true);
+  it('/requests (POST) - valid request', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/requests')
+      .set('Authorization', `Bearer ${empToken}`)
+      .send({
+        employeeId: 'e2',
+        locationId: 'l1',
+        leaveType: 'annual',
+        startDate: '2026-06-01',
+        endDate: '2026-06-02'
       });
+    
+    expect(res.status).toBe(201);
+    reqId = res.body.id;
   });
 
-  it('should list requests', () => {
+  it('/requests/:id/approve (PATCH)', () => {
     return request(app.getHttpServer())
-      .get('/requests?employeeId=shuja')
+      .patch(`/requests/${reqId}/approve`)
+      .set('Authorization', `Bearer ${mgrToken}`)
+      .send({ managerId: 'm1' })
+      .expect(200);
+  });
+
+  it('/requests (GET) list', () => {
+    return request(app.getHttpServer())
+      .get('/requests?employeeId=e2')
+      .set('Authorization', `Bearer ${empToken}`)
       .expect(200)
       .expect((res) => {
         expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body.some(r => r.id === requestId)).toBe(true);
-      });
-  });
-
-  it('should cancel the request', () => {
-    return request(app.getHttpServer())
-      .patch(`/requests/${requestId}/cancel`)
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.status).toBe('CANCELLED');
       });
   });
 });

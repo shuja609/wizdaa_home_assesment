@@ -1,10 +1,12 @@
-import { Controller, Post, Body, Get, UnauthorizedException, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Get, UnauthorizedException, Headers, UseGuards } from '@nestjs/common';
 import { BalancesService } from './balances.service';
 import { HcmBatchDto } from '../hcm/dto/hcm-batch.dto';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SyncLog } from '../database/entities/sync-log.entity';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('hcm')
 export class SyncController {
@@ -28,6 +30,8 @@ export class SyncController {
     return this.balancesService.processBatchUpdate(batchDto);
   }
 
+  @UseGuards(AuthGuard)
+  @Roles('manager')
   @Get('sync-status')
   async getSyncStatus() {
     const logs = await this.syncLogRepository.find({
@@ -37,3 +41,4 @@ export class SyncController {
     return { recentLogs: logs };
   }
 }
+

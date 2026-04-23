@@ -10,7 +10,7 @@ ReadyOn employees use this service to view leave balances and submit time-off re
 - **Sprint 1 [DONE]**: Core Balance CRUD with real-time HCM sync and local SQLite caching.
 - **Sprint 2 [DONE]**: Full request lifecycle (Submit, Approve, Reject, Cancel) with defensive balance validation and working-day calculations.
 - **Sprint 3 [DONE]**: Batch ingestion from HCM, defensive pending conflict detection, and scheduled drift detection/auto-correction.
-- **Sprint 4**: JWT-based security, rate limiting, and a Mock HCM server for testing.
+- **Sprint 4 [DONE]**: JWT-based security, rate limiting, and a Mock HCM server for testing.
 
 ## 🛠️ Tech Stack
 - **Framework**: NestJS
