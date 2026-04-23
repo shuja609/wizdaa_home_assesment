@@ -43,7 +43,7 @@ export class HcmAdapter {
       `Fetching balance from HCM for ${employeeId} at ${locationId}`,
     );
     const types = ['annual', 'sick'];
-    const results = [];
+    const results: any[] = [];
     for (const type of types) {
       const res = await this.fetchWithTimeout(
         `${this.hcmUrl}/hcm/balance/${employeeId}/${locationId}/${type}`,
