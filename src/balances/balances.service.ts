@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Balance } from '../database/entities/balance.entity';
+import { TimeOffRequest, RequestStatus } from '../database/entities/time-off-request.entity';
+import { SyncLog, SyncLogType } from '../database/entities/sync-log.entity';
 import { HcmAdapter } from '../hcm/hcm.adapter';
 import { ConfigService } from '@nestjs/config';
+import { HcmBatchDto } from '../hcm/dto/hcm-batch.dto';
 
 @Injectable()
 export class BalancesService {
@@ -13,11 +16,16 @@ export class BalancesService {
   constructor(
     @InjectRepository(Balance)
     private readonly balanceRepository: Repository<Balance>,
+    @InjectRepository(TimeOffRequest)
+    private readonly requestRepository: Repository<TimeOffRequest>,
+    @InjectRepository(SyncLog)
+    private readonly syncLogRepository: Repository<SyncLog>,
     private readonly hcmAdapter: HcmAdapter,
     private readonly configService: ConfigService,
   ) {
     this.syncThresholdMin = this.configService.get<number>('HCM_SYNC_THRESHOLD_MIN', 5);
   }
+
 
   /**
    * Gets all balances for an employee at a location.
@@ -103,5 +111,78 @@ export class BalancesService {
       );
     }
     return result;
+  }
+
+  async processBatchUpdate(batchDto: HcmBatchDto) {
+    const now = new Date();
+    let conflicts = 0;
+    let updated = 0;
+
+    for (const update of batchDto.updates) {
+      // 1. Check if balance differs
+      const localBalance = await this.balanceRepository.findOne({
+        where: {
+          employeeId: update.employeeId,
+          locationId: update.locationId,
+          leaveType: update.leaveType,
+        },
+      });
+
+      // If missing locally, just insert it
+      if (!localBalance) {
+        await this.balanceRepository.save(this.balanceRepository.create({
+          ...update,
+          lastSyncedAt: now,
+        }));
+        updated++;
+        continue;
+      }
+
+      // If there's no drift, skip
+      if (localBalance.balance === update.balance) {
+        // Just update the version and timestamp
+        await this.balanceRepository.update(
+          { employeeId: update.employeeId, locationId: update.locationId, leaveType: update.leaveType },
+          { lastSyncedAt: now, hcmVersion: update.hcmVersion }
+        );
+        continue;
+      }
+
+      // 2. We have a difference. Check for PENDING requests.
+      const pendingRequests = await this.requestRepository.find({
+        where: {
+          employeeId: update.employeeId,
+          locationId: update.locationId,
+          leaveType: update.leaveType,
+          status: RequestStatus.PENDING,
+        },
+      });
+
+      if (pendingRequests.length > 0) {
+        // Conflict! Flag the requests, don't touch the balance.
+        for (const req of pendingRequests) {
+          req.pendingConflict = true;
+          await this.requestRepository.save(req);
+        }
+        conflicts++;
+      } else {
+        // Safe to update
+        await this.balanceRepository.update(
+          { employeeId: update.employeeId, locationId: update.locationId, leaveType: update.leaveType },
+          { balance: update.balance, lastSyncedAt: now, hcmVersion: update.hcmVersion }
+        );
+        updated++;
+      }
+    }
+
+    // 3. Log the batch sync event
+    await this.syncLogRepository.save(this.syncLogRepository.create({
+      type: SyncLogType.BATCH,
+      triggeredBy: 'webhook',
+      status: 'SUCCESS',
+      detail: JSON.stringify({ processed: batchDto.updates.length, updated, conflicts }),
+    }));
+
+    return { processed: batchDto.updates.length, updated, conflicts };
   }
 }

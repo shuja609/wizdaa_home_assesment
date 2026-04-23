@@ -50,4 +50,7 @@ export class TimeOffRequest {
 
   @Column({ nullable: true })
   hcmError: string;
+
+  @Column({ default: false })
+  pendingConflict: boolean;
 }

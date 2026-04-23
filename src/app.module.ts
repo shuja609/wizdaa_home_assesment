@@ -8,12 +8,14 @@ import { TimeOffRequest } from './database/entities/time-off-request.entity';
 import { SyncLog } from './database/entities/sync-log.entity';
 import { BalancesModule } from './balances/balances.module';
 import { RequestsModule } from './requests/requests.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     BalancesModule,
     RequestsModule,
     TypeOrmModule.forRootAsync({
