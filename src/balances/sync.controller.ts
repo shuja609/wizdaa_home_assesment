@@ -14,7 +14,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SyncLog } from '../database/entities/sync-log.entity';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('hcm')
@@ -39,7 +38,7 @@ export class SyncController {
     return this.balancesService.processBatchUpdate(batchDto);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard)
   @Roles('manager')
   @Get('sync-status')
   async getSyncStatus() {

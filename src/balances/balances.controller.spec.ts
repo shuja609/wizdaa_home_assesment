@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BalancesController } from './balances.controller';
 import { BalancesService } from './balances.service';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { EmployeeThrottlerGuard } from '../common/guards/employee-throttler.guard';
 
 describe('BalancesController', () => {
@@ -19,8 +18,6 @@ describe('BalancesController', () => {
       providers: [{ provide: BalancesService, useValue: service }],
     })
       .overrideGuard(AuthGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(EmployeeThrottlerGuard)
       .useValue({ canActivate: () => true })

@@ -24,7 +24,7 @@ describe('CreateRequestDto', () => {
   // 2. Negative Test Cases
   describe('2. Negative Test Cases', () => {
     it('should fail if leaveType is an invalid enum constraint', async () => {
-      dto.leaveType = 'invalid-type' as any;
+      dto.leaveType = 'invalid-type';
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0].property).toBe('leaveType');

@@ -133,7 +133,7 @@ describe('RequestsService', () => {
       const weekendDto = {
         ...dto,
         startDate: '2026-04-25', // Saturday
-        endDate: '2026-04-26',   // Sunday
+        endDate: '2026-04-26', // Sunday
       };
       await expect(service.createRequest(weekendDto)).rejects.toThrow(
         BadRequestException,
@@ -197,4 +197,3 @@ describe('RequestsService', () => {
     });
   });
 });
-

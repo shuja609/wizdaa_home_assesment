@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SyncController } from './sync.controller';
 import { BalancesService } from './balances.service';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SyncLog } from '../database/entities/sync-log.entity';
@@ -24,7 +23,10 @@ describe('SyncController', () => {
       controllers: [SyncController],
       providers: [
         { provide: BalancesService, useValue: balancesService },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('test-secret') } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('test-secret') },
+        },
         {
           provide: getRepositoryToken(SyncLog),
           useValue: syncLogRepo,
@@ -32,8 +34,6 @@ describe('SyncController', () => {
       ],
     })
       .overrideGuard(AuthGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -48,11 +48,8 @@ describe('SyncController', () => {
         hcmVersion: 2,
         updates: [{ employeeId: 'e', locationId: 'l', balances: [] }],
       };
-      
-      const res = await controller.processBatch(
-        payload as any,
-        'test-secret',
-      );
+
+      const res = await controller.processBatch(payload as any, 'test-secret');
       expect(res).toEqual({ processed: 1 });
     });
 
@@ -72,4 +69,3 @@ describe('SyncController', () => {
     });
   });
 });
-

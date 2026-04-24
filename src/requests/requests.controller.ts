@@ -14,12 +14,11 @@ import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { RequestStatus } from '../database/entities/time-off-request.entity';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { EmployeeThrottlerGuard } from '../common/guards/employee-throttler.guard';
 
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard)
 @Controller('requests')
 export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}

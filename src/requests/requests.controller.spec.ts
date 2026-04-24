@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RequestsController } from './requests.controller';
 import { RequestsService } from './requests.service';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { EmployeeThrottlerGuard } from '../common/guards/employee-throttler.guard';
 
 describe('RequestsController', () => {
@@ -24,8 +23,6 @@ describe('RequestsController', () => {
       providers: [{ provide: RequestsService, useValue: service }],
     })
       .overrideGuard(AuthGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(EmployeeThrottlerGuard)
       .useValue({ canActivate: () => true })
