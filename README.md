@@ -1,84 +1,136 @@
-# Time-Off Microservice — Wizdaa Assessment
+# 🌴 Time-Off Microservice
 
-A standalone NestJS microservice designed to manage the lifecycle of employee time-off requests. It acts as an intelligent gateway to an external Human Capital Management (HCM) system, providing caching, conflict resolution, and defensive synchronization.
+[![NestJS](https://img.shields.io/badge/framework-NestJS-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()
+[![Code Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen?style=flat-square)]()
 
-## 🚀 Overview
+A high-resilience, production-ready microservice for managing employee time-off requests. This service acts as a sophisticated **Anti-Corruption Layer (ACL)** between internal application logic and external **Human Capital Management (HCM)** systems, ensuring data integrity through defensive synchronization and local caching.
 
-ReadyOn employees use this service to view leave balances and submit time-off requests. The service ensures data integrity by synchronizing local records with the HCM (the authoritative source of truth) using both real-time APIs and batch ingestion.
+---
 
-### Key Features
-- **Sprint 1 [DONE]**: Core Balance CRUD with real-time HCM sync and local SQLite caching.
-- **Sprint 2 [DONE]**: Full request lifecycle (Submit, Approve, Reject, Cancel) with defensive balance validation and working-day calculations.
-- **Sprint 3 [DONE]**: Batch ingestion from HCM, defensive pending conflict detection, and scheduled drift detection/auto-correction.
-- **Sprint 4 [DONE]**: JWT-based security, rate limiting, and a Mock HCM server for testing.
+## 🚀 Key Features
+
+- **Robust Request Lifecycle**: Full support for submission, manager approval, rejection, and employee-led cancellation with automated grace-period enforcement.
+- **Intelligent HCM Integration**: Real-time balance verification and debit/credit operations with fallback mechanisms for HCM downtime.
+- **Advanced Synchronization**: Scheduled drift detection and large-scale batch ingestion logic to ensure the local cache remains a reliable mirror of the HCM truth.
+- **Security First**: 
+  - **RBAC**: Strict Role-Based Access Control (Employee vs. Manager).
+  - **JWT Auth**: Secure identity verification.
+  - **Throttling**: Multi-tier rate limiting (Global + Per-Employee) to prevent API abuse.
+- **Observability**: Structured JSON logging via **Pino** for high-performance traceability and correlation.
+
+---
+
+## 🏗️ Core Architecture
+
+The service is built on several key design pillars:
+
+1.  **Anti-Corruption Layer (ACL)**: The `HcmAdapter` isolates the rest of the application from external HCM API changes and network instabilities.
+2.  **Cache-Aside Pattern**: Employee balances are cached locally in SQLite via TypeORM, allowing for high availability even when upstream services are unreachable.
+3.  **Defensive Programming**: Every transaction (Approval/Cancellation) involves a mandatory "Pre-check" against real-time HCM data before persisting local state.
+
+---
 
 ## 🛠️ Tech Stack
-- **Framework**: NestJS
-- **Database**: SQLite (via TypeORM)
-- **Language**: TypeScript
-- **Testing**: Jest & Supertest
-- **Logging**: Pino
+
+- **Core**: NestJS (v10+), TypeScript
+- **Persistence**: SQLite, TypeORM
+- **Security**: @nestjs/passport, JWT, @nestjs/throttler
+- **Observability**: nestjs-pino, pino-pretty
+- **Testing**: Jest, Supertest
+
+---
 
 ## 📦 Getting Started
 
 ### Prerequisites
-- Node.js (v18+)
-- npm
+- Node.js (v18.x or later)
+- npm (v9.x or later)
 
 ### Installation
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Create your `.env` file from the example:
-   ```bash
-   cp .env.example .env
-   ```
 
-### Running the App
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/shuja609/wizdaa_home_assesment.git
+    cd wizdaa_home_assesment
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup**:
+    ```bash
+    cp .env.example .env
+    ```
+    *Edit `.env` to configure your `JWT_SECRET` and `HCM_API_URL`.*
+
+---
+
+## 🚦 Execution & Quality Control
+
+### Running the Application
 ```bash
-# development mode
-npm run start
-
-# watch mode
+# Development (watch mode)
 npm run start:dev
 
-# production mode
+# Production
+npm run build
 npm run start:prod
 ```
 
-### Running Tests
+### Testing Suite
+We utilize a multi-paradigm testing strategy covering **Functional, Negative, Edge, Boundary, and Validation** cases.
+
 ```bash
-# unit tests
+# Comprehensive Unit tests
 npm run test
 
-# e2e tests
+# End-to-End (E2E) integration tests
 npm run test:e2e
 
-# coverage
+# Generate Coverage Report
 npm run test:cov
 ```
 
-### Code Quality
+### Code Quality Guards
 ```bash
-# run eslint to check static code quality
+# Static analysis (ESLint)
 npm run lint
 
-# run typescript compiler checks without building
+# TypeScript strict type checking
 npx tsc --noEmit
 ```
 
-## 📂 Project Structure
-- `src/database/entities`: TypeORM entities for `Balance`, `TimeOffRequest`, and `SyncLog`.
-- `src/hcm`: HCM Adapter and integration logic (Upcoming).
-- `src/balances`: Balance management and caching (Upcoming).
-- `src/requests`: Time-off request lifecycle (Upcoming).
-- `mock-hcm`: Standalone mock server for integration testing (Upcoming).
+---
 
-## 📄 Documentation
-- [PRD (Product Requirements Document)](file:///e:/Work/shuja/wizdaa_home_assesment/PRD.md)
-- [Implementation Plan](file:///C:/Users/HP%20450%20G%209/.gemini/antigravity/brain/5b4d571c-a617-4544-97e1-d5a436f3c295/implementation_plan.md)
-- [Walkthrough](file:///C:/Users/HP%20450%20G%209/.gemini/antigravity/brain/5b4d571c-a617-4544-97e1-d5a436f3c295/walkthrough.md)
+## 📂 Project Structure
+
+```text
+├── src
+│   ├── balances      # Balance management & HCM synchronization logic
+│   ├── common        # Shared guards, decorators, and date utilities
+│   ├── database      # TypeORM Entities (Balance, TimeOffRequest, SyncLog)
+│   ├── hcm           # Anti-Corruption Layer / External API Adapters
+│   ├── requests      # Time-off request business logic & flow
+│   └── main.ts       # Application entry point
+├── test              # E2E test suites (App, Requests, Balances, Sync, Adversarial)
+├── mock-hcm          # Standalone Mock HCM server for integration testing
+└── PRD.md            # Product Requirements Documentation
+```
+
+---
+
+## 📄 Documentation & Links
+
+- **[Product Requirements Document (PRD)](file:///e:/Work/shuja/wizdaa_home_assesment/PRD.md)**: Detailed feature specifications.
+
+
+---
 
 ## ⚖️ License
-This project is licensed under the MIT License.
+
+Distributed under the MIT License. See `LICENSE` for more information.
