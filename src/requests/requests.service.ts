@@ -105,7 +105,7 @@ export class RequestsService {
    */
   async approveRequest(id: string, managerId: string): Promise<TimeOffRequest> {
     const request = await this.findOne(id);
-    
+
     // Serialize per employee to prevent race conditions during balance check + debit
     const release = await this.mutexService.acquire(request.employeeId);
     try {

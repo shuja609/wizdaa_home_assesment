@@ -126,7 +126,7 @@ describe('Adversarial & Security (e2e)', () => {
         startDate: '2026-06-01',
         endDate: '2026-06-08', // 6 working days
       });
-    
+
     if (req1.status !== 201) {
       console.log('req1 failed:', req1.status, req1.body);
     }
@@ -164,7 +164,10 @@ describe('Adversarial & Security (e2e)', () => {
     // 3. Validation: One must succeed and one must fail
     const statuses = results.map((r) => r.status);
     if (!statuses.includes(200)) {
-      console.log('Results Body:', results.map(r => r.body));
+      console.log(
+        'Results Body:',
+        results.map((r) => r.body),
+      );
     }
     expect(statuses).toContain(200);
     expect(statuses).toContain(400); // Insufficient balance at HCM or local
@@ -181,7 +184,7 @@ describe('Adversarial & Security (e2e)', () => {
 
     const employeeId = `timeout-emp-${Date.now()}`;
     const mgrToken = jwtService.sign({ sub: 'mgr1', role: 'manager' });
-    
+
     // We expect the call (like getBalances via sync or direct) to fail gracefully.
     // Let's try to sync balance directly
     const res = await request(app.getHttpServer())

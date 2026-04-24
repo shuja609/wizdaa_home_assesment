@@ -96,6 +96,49 @@ The project is equipped with a `docker-compose.yml` file and a `requests.http` f
    - Approving or rejecting requests (Manager flow)
    - Testing HCM sync webhook endpoints
 
+4. **Interactive API Documentation (Swagger)**: 
+   - 🚀 **URL**: [http://localhost:3000/docs](http://localhost:3000/docs)
+   - 🛠️ **Testing Flow**:
+     1. **Login**: Expand the `Authentication` section and use `POST /auth/login`.
+        - *Employee Sample*: `{ "sub": "emp-001", "role": "employee" }`
+        - *Manager Sample*: `{ "sub": "mng-001", "role": "manager" }`
+        - *HCM System Sample*: `{ "sub": "hcm-admin", "role": "hcm_system" }`
+     2. **Authorize**: Copy the `access_token` from the response. Click the top-right **Authorize** button, paste the token, and click **Authorize**.
+     3. **Test Endpoints**:
+        - **Requests**: Create a request using `POST /requests`. (Requires `employee` role).
+        - **Approval**: Use `PATCH /requests/{id}/approve`. (Requires `manager` role).
+        - **HCM Sync**: Use `POST /hcm/batch`. This requires **both** the `hcm_system` JWT token **and** the `x-hcm-secret` header (default: `wizdaa_sync_token_2026`).
+        - **Health**: Check system status via `GET /health`.
+
+5. **Quick Lifecycle Verification (Terminal)**:
+   > [!NOTE]
+   > **Architecture Note**: Your `curl` commands target **Port 3000** (the Microservice). The Microservice then internally communicates with the Mock HCM on **Port 3001** (using the `HCM_API_URL` defined in your `.env`).
+   
+   If you prefer the command line, follow this flow:
+   - **Start Mock HCM**: `node mock-hcm/server.js` (runs on port 3001).
+   - **Get Token**: `curl -X POST http://localhost:3000/auth/login -H "Content-Type: application/json" -d "{\"sub\": \"emp-1\", \"role\": \"employee\"}"`
+   - **Create Request**: Use the token from above:
+     ```bash
+     curl -X POST http://localhost:3000/requests \
+       -H "Content-Type: application/json" \
+       -H "Authorization: Bearer <TOKEN>" \
+       -d "{\"employeeId\": \"emp-1\", \"locationId\": \"loc-1\", \"leaveType\": \"annual\", \"startDate\": \"2026-05-01\", \"endDate\": \"2026-05-05\"}"
+     ```
+    - **Approve (Manager)**: Login as manager first, then use the `id` from the previous response:
+      ```bash
+      curl -X PATCH http://localhost:3000/requests/<ID>/approve \
+        -H "Authorization: Bearer <MANAGER_TOKEN>"
+      ```
+
+   - **Automated Verification Script**: 
+     A pre-configured script is available to run the entire flow (Ingest -> Create -> Approve) automatically.
+     ```bash
+     # 1. Start the server and Mock HCM (as described above)
+     # 2. Run the script:
+     node scratch/verify_full_flow.js
+     ```
+
+
 ### Testing Suite
 We utilize a multi-paradigm testing strategy covering **Functional, Negative, Edge, Boundary, and Validation** cases.
 

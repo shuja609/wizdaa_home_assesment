@@ -12,9 +12,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtModule } from '@nestjs/jwt';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { HealthModule } from './health/health.module';
+import { AuthModule } from './auth/auth.module';
 
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { JwtModule } from '@nestjs/jwt';
 /**
  * Root Application Module.
  * Responsible for orchestrating global concerns including:
@@ -72,6 +74,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     // 7. Core Feature Modules
     BalancesModule,
     RequestsModule,
+    AuthModule,
+    HealthModule,
 
     // 8. Database Persistence Layer
     TypeOrmModule.forRootAsync({

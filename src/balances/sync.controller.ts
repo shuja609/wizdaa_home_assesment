@@ -19,11 +19,19 @@ import {
   TimeOffRequest,
   RequestStatus,
 } from '../database/entities/time-off-request.entity';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiHeader,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 /**
  * Controller for HCM Inbound communication and Sync Health monitoring.
  * Handles authoritative batch updates from the external HCM system via webhooks.
  */
+@ApiTags('Balances & Sync')
 @Controller('hcm')
 export class SyncController {
   constructor(
@@ -39,6 +47,17 @@ export class SyncController {
    * Authoritative batch update endpoint for HCM Sync.
    * Secured via a shared HCM secret header.
    */
+  @ApiOperation({ summary: 'Authoritative batch update from HCM (Webhook)' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Roles('hcm_system')
+  @ApiHeader({
+    name: 'x-hcm-secret',
+    description: 'Authoritative shared secret for HCM communications',
+    required: true,
+  })
+  @ApiResponse({ status: 201, description: 'Batch processed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or missing secret' })
   @Post('batch')
   async processBatch(
     @Body() batchDto: HcmBatchDto,
@@ -57,6 +76,10 @@ export class SyncController {
    * Returns: last batch time, last drift time, and unresolved conflict counts.
    * Access restricted to Managers.
    */
+  @ApiOperation({
+    summary: 'Get synchronization health metrics (Manager Only)',
+  })
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Roles('manager')
   @Get('sync-status')

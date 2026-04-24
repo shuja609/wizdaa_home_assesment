@@ -10,6 +10,7 @@ describe('Sync (e2e)', () => {
   let mockServer: any;
   let mgrToken: string;
   let empToken: string;
+  let hcmToken: string;
 
   beforeAll(async () => {
     mockServer = mockHcmApp.listen(3004);
@@ -26,6 +27,7 @@ describe('Sync (e2e)', () => {
     const jwtService = app.get(JwtService);
     mgrToken = jwtService.sign({ sub: 'm1', role: 'manager' });
     empToken = jwtService.sign({ sub: 'clean-emp', role: 'employee' });
+    hcmToken = jwtService.sign({ sub: 'hcm', role: 'hcm_system' });
   });
 
   afterAll(async () => {
@@ -36,6 +38,7 @@ describe('Sync (e2e)', () => {
   it('should reject batch without correct secret', () => {
     return request(app.getHttpServer())
       .post('/hcm/batch')
+      .set('Authorization', `Bearer ${hcmToken}`)
       .send({
         updates: [
           {
@@ -43,7 +46,7 @@ describe('Sync (e2e)', () => {
             locationId: 'loc1',
             leaveType: 'annual',
             balance: 15,
-            hcmVersion: 'v2',
+            hcmVersion: 2,
           },
         ],
       })
@@ -66,6 +69,7 @@ describe('Sync (e2e)', () => {
 
     return request(app.getHttpServer())
       .post('/hcm/batch')
+      .set('Authorization', `Bearer ${hcmToken}`)
       .set('x-hcm-secret', 'test-secret')
       .send({
         updates: [
@@ -74,14 +78,14 @@ describe('Sync (e2e)', () => {
             locationId: 'loc1',
             leaveType: 'annual',
             balance: 15,
-            hcmVersion: 'v2',
+            hcmVersion: 2,
           },
           {
             employeeId: 'other-emp',
             locationId: 'loc1',
             leaveType: 'annual',
             balance: 5,
-            hcmVersion: 'v2',
+            hcmVersion: 2,
           },
         ],
       })

@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 /**
  * Service to handle serialization of operations per key.
  * Used to prevent race conditions during "read-modify-write" cycles on balances.
- * 
+ *
  * Note: This implementation is in-memory and suitable for single-instance SQLite.
  * For distributed systems, this would be replaced with a Redis-backed lock.
  */
@@ -17,13 +17,16 @@ export class MutexService {
    */
   async acquire(key: string): Promise<() => void> {
     const previous = this.locks.get(key) || Promise.resolve();
-    
+
     let resolve: () => void;
     const current = new Promise<void>((r) => {
       resolve = r;
     });
 
-    this.locks.set(key, previous.then(() => current));
+    this.locks.set(
+      key,
+      previous.then(() => current),
+    );
 
     await previous;
 

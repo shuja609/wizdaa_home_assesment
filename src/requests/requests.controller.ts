@@ -16,11 +16,20 @@ import { RequestStatus } from '../database/entities/time-off-request.entity';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { EmployeeThrottlerGuard } from '../common/guards/employee-throttler.guard';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 /**
  * Controller managing the Time-Off Request lifecycle.
  * Handles submission, retrieval, manager approvals, and cancellations.
  */
+@ApiTags('Time-Off Requests')
+@ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('requests')
 export class RequestsController {
@@ -30,6 +39,16 @@ export class RequestsController {
    * Submits a new time-off request.
    * Enforces a submission rate limit per Employee (10 req/min).
    */
+  @ApiOperation({ summary: 'Submit a new time-off request' })
+  @ApiResponse({ status: 201, description: 'Request successfully submitted' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or insufficient balance',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden (e.g. submitting for others)',
+  })
   @UseGuards(EmployeeThrottlerGuard)
   @Roles('employee')
   @Post()
@@ -47,6 +66,18 @@ export class RequestsController {
    * Retrieves a list of requests based on employee or status filters.
    * Employees are restricted to their own history.
    */
+  @ApiOperation({ summary: 'List time-off requests' })
+  @ApiQuery({
+    name: 'employeeId',
+    required: false,
+    description: 'Filter by employee ID (Managers only)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: RequestStatus,
+    description: 'Filter by status',
+  })
   @Roles('manager', 'employee')
   @Get()
   async findAll(
@@ -64,6 +95,7 @@ export class RequestsController {
   /**
    * Fetches detailed information for a single request.
    */
+  @ApiOperation({ summary: 'Get details of a specific request' })
   @Roles('manager', 'employee')
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req: any) {
@@ -80,6 +112,7 @@ export class RequestsController {
   /**
    * Approves a PENDING request. Restricted to Managers.
    */
+  @ApiOperation({ summary: 'Approve a time-off request (Manager Only)' })
   @Roles('manager')
   @Patch(':id/approve')
   async approve(@Param('id') id: string, @Body('managerId') managerId: string) {
@@ -89,6 +122,7 @@ export class RequestsController {
   /**
    * Rejects a PENDING request. Restricted to Managers.
    */
+  @ApiOperation({ summary: 'Reject a time-off request (Manager Only)' })
   @Roles('manager')
   @Patch(':id/reject')
   async reject(@Param('id') id: string, @Body('managerId') managerId: string) {
@@ -98,6 +132,7 @@ export class RequestsController {
   /**
    * Allows an Employee to cancel their own request.
    */
+  @ApiOperation({ summary: 'Cancel a time-off request' })
   @Roles('employee')
   @Patch(':id/cancel')
   async cancel(@Param('id') id: string, @Request() req: any) {
