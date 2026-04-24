@@ -3,8 +3,11 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
+/** Lifecycle stages of a Time-Off Request */
 export enum RequestStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
@@ -12,50 +15,72 @@ export enum RequestStatus {
   CANCELLED = 'CANCELLED',
 }
 
+/**
+ * Core Domain Entity representing a time-off submission.
+ * Captures the request window, employee metadata, and manager resolutions.
+ */
 @Entity('time_off_requests')
 export class TimeOffRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Authoritative Employee ID */
+  @Index()
   @Column()
   employeeId: string;
 
+  /** Home location ID */
   @Column()
   locationId: string;
 
+  /** Desired leave type */
   @Column()
   leaveType: string;
 
-  @Column('date')
-  startDate: string;
+  @Column()
+  startDate: Date;
 
-  @Column('date')
-  endDate: string;
+  @Column()
+  endDate: Date;
 
-  @Column('real')
+  /** Calculated duration in business days (weekends excluded) */
+  @Column('float')
   days: number;
 
   @Column({
-    type: 'text',
+    type: 'simple-enum',
+    enum: RequestStatus,
     default: RequestStatus.PENDING,
   })
   status: RequestStatus;
 
-  @CreateDateColumn()
-  requestedAt: Date;
-
-  @Column({ type: 'datetime', nullable: true })
-  resolvedAt: Date;
-
+  /** ID of the manager who resolved the request */
   @Column({ nullable: true })
   managerId: string;
 
+  /** Standard note accompanying the request */
+  @Column({ nullable: true })
+  note: string;
+
+  /** Flag indicating if the request conflicts with a recently pushed HCM batch */
+  @Column({ default: false })
+  pendingConflict: boolean;
+
+  /** Confirmation flag that the debit was successfully transmitted to HCM */
   @Column({ default: false })
   hcmSubmitted: boolean;
 
-  @Column({ nullable: true })
+  /** Capture of any error messages returned by the authoritative HCM API */
+  @Column({ type: 'text', nullable: true })
   hcmError: string;
 
-  @Column({ default: false })
-  pendingConflict: boolean;
+  @CreateDateColumn()
+  requestedAt: Date;
+
+  /** Timestamp of approval or rejection */
+  @Column({ nullable: true })
+  resolvedAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

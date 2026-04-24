@@ -1,8 +1,8 @@
 import {
   Controller,
   Get,
-  Post,
   Param,
+  Post,
   UseGuards,
   Request,
   ForbiddenException,
@@ -11,26 +11,37 @@ import { BalancesService } from './balances.service';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
+/**
+ * Controller for retrieving and manually synchronizing leave balances.
+ * Access is restricted to Employees (own records) and Managers (all records).
+ */
 @UseGuards(AuthGuard)
 @Controller('balances')
 export class BalancesController {
   constructor(private readonly balancesService: BalancesService) {}
 
-  @Roles('employee', 'manager')
+  /**
+   * Retrieves leave balances for a specific employee and location.
+   * Enforces self-service visibility for Employees.
+   */
+  @Roles('manager', 'employee')
   @Get(':employeeId/:locationId')
   async getBalances(
     @Param('employeeId') employeeId: string,
     @Param('locationId') locationId: string,
     @Request() req: any,
   ) {
+    // F4.1: Security Identity Matching
     if (req.user.role === 'employee' && employeeId !== req.user.sub) {
-      throw new ForbiddenException(
-        'Employees can only view their own balances',
-      );
+      throw new ForbiddenException('Cannot access other employees balances');
     }
     return this.balancesService.getBalances(employeeId, locationId);
   }
 
+  /**
+   * Forces a real-time sync from HCM for a specific employee and location.
+   * Access is restricted to Managers to prevent unnecessary HCM API load.
+   */
   @Roles('manager')
   @Post(':employeeId/:locationId/sync')
   async syncBalances(

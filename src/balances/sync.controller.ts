@@ -20,6 +20,10 @@ import {
   RequestStatus,
 } from '../database/entities/time-off-request.entity';
 
+/**
+ * Controller for HCM Inbound communication and Sync Health monitoring.
+ * Handles authoritative batch updates from the external HCM system via webhooks.
+ */
 @Controller('hcm')
 export class SyncController {
   constructor(
@@ -31,6 +35,10 @@ export class SyncController {
     private readonly requestRepository: Repository<TimeOffRequest>,
   ) {}
 
+  /**
+   * Authoritative batch update endpoint for HCM Sync.
+   * Secured via a shared HCM secret header.
+   */
   @Post('batch')
   async processBatch(
     @Body() batchDto: HcmBatchDto,
@@ -44,6 +52,11 @@ export class SyncController {
     return this.balancesService.processBatchUpdate(batchDto);
   }
 
+  /**
+   * Retrieves high-level health metrics for the Synchronization engine.
+   * Returns: last batch time, last drift time, and unresolved conflict counts.
+   * Access restricted to Managers.
+   */
   @UseGuards(AuthGuard)
   @Roles('manager')
   @Get('sync-status')

@@ -72,7 +72,7 @@ describe('BalancesService', () => {
   it('should fetch from HCM on cache miss', async () => {
     repo.find.mockResolvedValue([]);
     adapter.getBalance.mockResolvedValue([
-      { leaveType: 'annual', balance: 10, hcmVersion: 'v1' },
+      { leaveType: 'annual', balance: 10, hcmVersion: 1 },
     ]);
     repo.save.mockResolvedValue({ id: 1 });
 
@@ -105,7 +105,7 @@ describe('BalancesService', () => {
             locationId: 'l1',
             leaveType: 'annual',
             balance: 5,
-            hcmVersion: 'v2',
+            hcmVersion: 2,
           },
         ],
       };
@@ -137,7 +137,7 @@ describe('BalancesService', () => {
             locationId: 'l1',
             leaveType: 'annual',
             balance: 5,
-            hcmVersion: 'v2',
+            hcmVersion: 2,
           },
         ],
       };

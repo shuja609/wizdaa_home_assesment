@@ -11,6 +11,10 @@ import { HcmAdapter } from '../hcm/hcm.adapter';
 import { ConfigService } from '@nestjs/config';
 import { HcmBatchDto } from '../hcm/dto/hcm-batch.dto';
 
+/**
+ * Service responsible for managing employee leave balances.
+ * Implements the Cache-Aside pattern for high availability and resilient synchronization with the external HCM.
+ */
 @Injectable()
 export class BalancesService {
   private readonly logger = new Logger(BalancesService.name);
@@ -26,6 +30,7 @@ export class BalancesService {
     private readonly hcmAdapter: HcmAdapter,
     private readonly configService: ConfigService,
   ) {
+    // Read the cache staleness threshold from configuration.
     this.syncThresholdMin = this.configService.get<number>(
       'HCM_SYNC_THRESHOLD_MIN',
       5,
@@ -33,8 +38,12 @@ export class BalancesService {
   }
 
   /**
-   * Gets all balances for an employee at a location.
-   * Checks local cache first; syncs from HCM if stale or missing.
+   * Retrieves all leave balances for an employee at a specific location.
+   * Efficiently serves from local cache if within the freshness threshold.
+   *
+   * @param employeeId Unique identifier for the employee.
+   * @param locationId Workplace location ID.
+   * @returns Array of Balance objects.
    */
   async getBalances(
     employeeId: string,
@@ -59,7 +68,8 @@ export class BalancesService {
   }
 
   /**
-   * Forces a synchronization with the HCM system.
+   * Forces a real-time synchronization with the external HCM system.
+   * Updates the local cache with the latest authoritative data.
    */
   async syncBalances(
     employeeId: string,
@@ -96,12 +106,19 @@ export class BalancesService {
     return updatedBalances;
   }
 
+  /**
+   * Internal helper to determine if a cached record has expired.
+   */
   private isStale(balance: Balance): boolean {
     const thresholdMs = this.syncThresholdMin * 60 * 1000;
     const timeSinceSync = Date.now() - new Date(balance.lastSyncedAt).getTime();
     return timeSinceSync > thresholdMs;
   }
 
+  /**
+   * Executes a debit operation against the HCM system.
+   * Includes defensive "silence handling" (re-fetching on 2xx without balance confirmation).
+   */
   async debitHcm(
     employeeId: string,
     locationId: string,
@@ -117,8 +134,8 @@ export class BalancesService {
     if (result.success) {
       let finalBalance = result.newBalance;
 
-      // F2.2: Defensive behavior on HCM silence
-      // If HCM returns 2xx but no confirmation of new balance, re-fetch after 2s
+      // PRD F2.2: Defensive behavior on HCM silence
+      // If HCM returns success but no balance confirmation, re-fetch after 2s.
       if (finalBalance === undefined) {
         this.logger.warn(
           `HCM returned success but no balance confirmation for ${employeeId}. Re-fetching in 2s...`,
@@ -145,6 +162,9 @@ export class BalancesService {
     return result;
   }
 
+  /**
+   * Executes a credit operation against the HCM system (e.g., on cancellation).
+   */
   async creditHcm(
     employeeId: string,
     locationId: string,
@@ -160,7 +180,7 @@ export class BalancesService {
     if (result.success) {
       let finalBalance = result.newBalance;
 
-      // F2.2: Defensive behavior on HCM silence
+      // PRD F2.2: Defensive behavior on HCM silence
       if (finalBalance === undefined) {
         this.logger.warn(
           `HCM returned success but no balance confirmation for ${employeeId} on credit. Re-fetching in 2s...`,
@@ -187,13 +207,16 @@ export class BalancesService {
     return result;
   }
 
+  /**
+   * Processes a large batch of balance updates pushed from the HCM webhook.
+   * Respects local PENDING requests by flagging conflicts rather than blind overwrites.
+   */
   async processBatchUpdate(batchDto: HcmBatchDto) {
     const now = new Date();
     let conflicts = 0;
     let updated = 0;
 
     for (const update of batchDto.updates) {
-      // 1. Check if balance differs
       const localBalance = await this.balanceRepository.findOne({
         where: {
           employeeId: update.employeeId,
@@ -202,7 +225,6 @@ export class BalancesService {
         },
       });
 
-      // If missing locally, just insert it
       if (!localBalance) {
         await this.balanceRepository.save(
           this.balanceRepository.create({
@@ -214,9 +236,8 @@ export class BalancesService {
         continue;
       }
 
-      // If there's no drift, skip
+      // Skip processing if there is no numerical drift.
       if (localBalance.balance === update.balance) {
-        // Just update the version and timestamp
         await this.balanceRepository.update(
           {
             employeeId: update.employeeId,
@@ -228,7 +249,7 @@ export class BalancesService {
         continue;
       }
 
-      // 2. We have a difference. Check for PENDING requests.
+      // Check for PENDING requests that might be invalidated by this update.
       const pendingRequests = await this.requestRepository.find({
         where: {
           employeeId: update.employeeId,
@@ -239,14 +260,14 @@ export class BalancesService {
       });
 
       if (pendingRequests.length > 0) {
-        // Conflict! Flag the requests, don't touch the balance.
+        // Conflict detected! Do not overwrite the balance; flag the requests for manager review.
         for (const req of pendingRequests) {
           req.pendingConflict = true;
           await this.requestRepository.save(req);
         }
         conflicts++;
       } else {
-        // Safe to update
+        // Safe to update local record as there are no in-flight requests.
         await this.balanceRepository.update(
           {
             employeeId: update.employeeId,
@@ -263,7 +284,7 @@ export class BalancesService {
       }
     }
 
-    // 3. Log the batch sync event
+    // Persist a audit log of the batch sync operation.
     await this.syncLogRepository.save(
       this.syncLogRepository.create({
         type: SyncLogType.BATCH,

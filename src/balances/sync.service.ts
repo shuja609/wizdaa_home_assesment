@@ -12,6 +12,10 @@ import {
   RequestStatus,
 } from '../database/entities/time-off-request.entity';
 
+/**
+ * Service managing recurring synchronization tasks and drift detection.
+ * Enforces consistency between the microservice's state and the external HCM system.
+ */
 @Injectable()
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
@@ -28,16 +32,22 @@ export class SyncService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /**
+   * Scheduled job to detect numerical drift between local cache and HCM.
+   * Corrects discrepancies and alerts managers if drifts occur during active PENDING requests.
+   * Run frequency: Hourly (Configurable via code).
+   */
   @Cron(CronExpression.EVERY_HOUR)
   async handleDriftDetection() {
     this.logger.log('Starting scheduled drift detection...');
 
-    // In a massive system, we'd chunk this. For this sample, we process all active locals.
+    // Load all local balance records for cross-verification.
     const allLocalBalances = await this.balanceRepository.find();
     let driftCount = 0;
 
     for (const local of allLocalBalances) {
       try {
+        // Fetch current state from the external HCM adapter.
         const hcmBalances = await this.balancesService['hcmAdapter'].getBalance(
           local.employeeId,
           local.locationId,
@@ -47,6 +57,7 @@ export class SyncService {
           (b) => b.leaveType === local.leaveType,
         );
 
+        // Check for numerical drift beyond floating-point epsilon.
         if (
           hcmEquivalent &&
           Math.abs(hcmEquivalent.balance - local.balance) > 0.001
@@ -54,13 +65,13 @@ export class SyncService {
           driftCount++;
           const previousBalance = local.balance;
 
-          // Auto-correct
+          // Auto-correction: Sync local state with HCM ground truth.
           local.balance = hcmEquivalent.balance;
           local.hcmVersion = hcmEquivalent.hcmVersion;
           local.lastSyncedAt = new Date();
           await this.balanceRepository.save(local);
 
-          // F3.2: Emit internal event
+          // F3.2: Emit internal event for downstream subscribers (audit/analytics).
           this.eventEmitter.emit('balance.drift', {
             employeeId: local.employeeId,
             locationId: local.locationId,
@@ -69,7 +80,7 @@ export class SyncService {
             current: local.balance,
           });
 
-          // F3.2: Alert if PENDING conflicts exist
+          // F3.2: Alerting logic for high-risk drifts (occurring mid-request).
           const pendingCount = await this.requestRepository.count({
             where: {
               employeeId: local.employeeId,
@@ -85,7 +96,7 @@ export class SyncService {
             );
           }
 
-          // Log drift exclusively
+          // Persist a specialized drift log entry.
           await this.syncLogRepository.save(
             this.syncLogRepository.create({
               type: SyncLogType.DRIFT_CORRECT,
@@ -102,7 +113,7 @@ export class SyncService {
             }),
           );
         }
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error(
           `Failed to analyze drift for ${local.employeeId}: ${error.message}`,
         );

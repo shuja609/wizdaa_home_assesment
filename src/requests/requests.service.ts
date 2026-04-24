@@ -9,6 +9,10 @@ import { CreateRequestDto } from './dto/create-request.dto';
 import { calculateBusinessDays } from '../common/utils/date.utils';
 import { BalancesService } from '../balances/balances.service';
 
+/**
+ * Service responsible for the Time-Off Request lifecycle.
+ * Manages submission, validation, manager approval/rejection, and employee cancellation.
+ */
 @Injectable()
 export class RequestsService {
   private readonly logger = new Logger(RequestsService.name);
@@ -19,14 +23,20 @@ export class RequestsService {
     private readonly balancesService: BalancesService,
   ) {}
 
+  /**
+   * Submits a new time-off request.
+   * Performs an initial local balance check to avoid unnecessary PENDING clutter.
+   */
   async createRequest(dto: CreateRequestDto): Promise<TimeOffRequest> {
     const startDate = new Date(dto.startDate);
     const endDate = new Date(dto.endDate);
 
+    // Basic date range validation.
     if (startDate > endDate) {
       throw new BadRequestException('Start date cannot be after end date');
     }
 
+    // Calculate duration excluding weekends.
     const days = calculateBusinessDays(startDate, endDate);
     if (days === 0) {
       throw new BadRequestException(
@@ -34,7 +44,7 @@ export class RequestsService {
       );
     }
 
-    // Local balance pre-check
+    // Defensive local balance pre-check using cached version (forced sync happen on approval).
     const balances = await this.balancesService.getBalances(
       dto.employeeId,
       dto.locationId,
@@ -56,6 +66,9 @@ export class RequestsService {
     return this.requestRepository.save(request);
   }
 
+  /**
+   * Fetches requests based on optional filters for employee and status.
+   */
   async findAll(
     employeeId?: string,
     status?: RequestStatus,
@@ -70,6 +83,9 @@ export class RequestsService {
     });
   }
 
+  /**
+   * Retrieves a single request by ID or throws if not found.
+   */
   async findOne(id: string): Promise<TimeOffRequest> {
     const request = await this.requestRepository.findOne({ where: { id } });
     if (!request) {
@@ -78,6 +94,13 @@ export class RequestsService {
     return request;
   }
 
+  /**
+   * Approves a PENDING request.
+   * Forces a real-time HCM balance validation and performs the debit operation.
+   *
+   * @param id Request UUID.
+   * @param managerId ID of the approving manager.
+   */
   async approveRequest(id: string, managerId: string): Promise<TimeOffRequest> {
     const request = await this.findOne(id);
     if (request.status !== RequestStatus.PENDING) {
@@ -86,21 +109,21 @@ export class RequestsService {
       );
     }
 
-    // 1. Force-sync balance from HCM (Mandatory per PRD)
+    // 1. Mandatory real-time balance sync from HCM authoritative source.
     const balances = await this.balancesService.syncBalances(
       request.employeeId,
       request.locationId,
     );
     const balance = balances.find((b) => b.leaveType === request.leaveType);
 
-    // 2. Re-validate balance
+    // 2. Final re-validation before commit.
     if (!balance || balance.balance < request.days) {
       throw new BadRequestException(
         `Insufficient ${request.leaveType} balance at HCM. Available: ${balance?.balance ?? 0}, Required: ${request.days}`,
       );
     }
 
-    // 3. Call HCM Debit
+    // 3. Atomic attempt to debit HCM.
     try {
       const hcmResult = await this.balancesService.debitHcm(
         request.employeeId,
@@ -118,7 +141,8 @@ export class RequestsService {
         request.hcmError = 'HCM debit failed at external system';
         throw new BadRequestException(request.hcmError);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Log the error and preserve it in the request audit trail.
       request.hcmError = error.message;
       await this.requestRepository.save(request);
       throw error;
@@ -127,6 +151,9 @@ export class RequestsService {
     return this.requestRepository.save(request);
   }
 
+  /**
+   * Rejects a PENDING request.
+   */
   async rejectRequest(id: string, managerId: string): Promise<TimeOffRequest> {
     const request = await this.findOne(id);
     if (request.status !== RequestStatus.PENDING) {
@@ -142,6 +169,10 @@ export class RequestsService {
     return this.requestRepository.save(request);
   }
 
+  /**
+   * Employee-led request cancellation.
+   * Handles rollback of HCM credits if the request is already approved but within the grace window.
+   */
   async cancelRequest(id: string): Promise<TimeOffRequest> {
     const request = await this.findOne(id);
 
@@ -154,8 +185,8 @@ export class RequestsService {
     }
 
     if (request.status === RequestStatus.APPROVED) {
-      // Check grace window
-      const graceHours = 24; // Default as per PRD; could be from config
+      // Enforce the 24h grace window for approved request rollbacks.
+      const graceHours = 24;
       const hoursSinceRequest =
         (Date.now() - new Date(request.requestedAt).getTime()) /
         (1000 * 60 * 60);
@@ -166,7 +197,7 @@ export class RequestsService {
         );
       }
 
-      // Rollback HCM debit
+      // Rollback HCM debit to maintain synchronization.
       try {
         const hcmResult = await this.balancesService.creditHcm(
           request.employeeId,
@@ -179,9 +210,8 @@ export class RequestsService {
           this.logger.error(
             `Failed to credit HCM on cancellation for request ${id}`,
           );
-          // Still cancel locally but log the failure
         }
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error(
           `HCM communication error during cancellation: ${error.message}`,
         );

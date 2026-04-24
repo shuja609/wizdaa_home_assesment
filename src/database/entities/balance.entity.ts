@@ -1,22 +1,52 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 
+/**
+ * Metadata Entity to store and track leave balances for employees.
+ * Acts as a local cache for high-performance retrieval and resilient request submission.
+ */
 @Entity('balances')
+@Index(['employeeId', 'locationId', 'leaveType'], { unique: true })
 export class Balance {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  /** Authoritative Employee ID from HCM */
+  @Column()
   employeeId: string;
 
-  @PrimaryColumn()
+  /** Workplace location identifier */
+  @Column()
   locationId: string;
 
-  @PrimaryColumn()
+  /** Type of leave (e.g., 'annual', 'sick') */
+  @Column()
   leaveType: string;
 
-  @Column('real')
+  /** Current numerical balance in days */
+  @Column('float')
   balance: number;
 
-  @Column({ nullable: true })
-  hcmVersion: string;
+  /**
+   * Last known version identifier from HCM.
+   * Used for concurrency and tracking authoritative updates.
+   */
+  @Column({ default: 0 })
+  hcmVersion: number;
 
-  @Column('datetime')
+  /** Timestamp of the last successful synchronization with the external system */
+  @Column()
   lastSyncedAt: Date;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

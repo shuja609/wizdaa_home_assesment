@@ -5,6 +5,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+/**
+ * Adapter module responsible for all outbound communications with the external HCM system.
+ * Acts as an Anti-Corruption Layer (ACL) to shield the domain from external API changes.
+ * Includes timeout and error normalization logic.
+ */
 @Injectable()
 export class HcmAdapter {
   private readonly logger = new Logger(HcmAdapter.name);
@@ -17,6 +22,9 @@ export class HcmAdapter {
     );
   }
 
+  /**
+   * Helper to perform HTTP fetches with a mandatory timeout.
+   */
   private async fetchWithTimeout(url: string, options: any, timeoutMs = 5000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -38,6 +46,10 @@ export class HcmAdapter {
     }
   }
 
+  /**
+   * Retrieves leave balances from HCM.
+   * Iterates through supported leave types to build a complete local view.
+   */
   async getBalance(employeeId: string, locationId: string): Promise<any[]> {
     this.logger.log(
       `Fetching balance from HCM for ${employeeId} at ${locationId}`,
@@ -45,18 +57,27 @@ export class HcmAdapter {
     const types = ['annual', 'sick'];
     const results: any[] = [];
     for (const type of types) {
-      const res = await this.fetchWithTimeout(
-        `${this.hcmUrl}/hcm/balance/${employeeId}/${locationId}/${type}`,
-        { method: 'GET' },
-      );
-      if (res.ok) {
-        const data = await res.json();
-        results.push(data);
+      try {
+        const res = await this.fetchWithTimeout(
+          `${this.hcmUrl}/hcm/balance/${employeeId}/${locationId}/${type}`,
+          { method: 'GET' },
+        );
+        if (res.ok) {
+          const data = await res.json();
+          results.push(data);
+        }
+      } catch (error: any) {
+        this.logger.error(`HCM fetch error for ${type}: ${error.message}`);
+        // Partial failures are handled by returning the results collected so far.
       }
     }
     return results;
   }
 
+  /**
+   * Pushes a debit request to HCM.
+   * Atomic operation to reduce authoritative balance.
+   */
   async debitBalance(
     employeeId: string,
     locationId: string,
@@ -79,6 +100,9 @@ export class HcmAdapter {
     return data;
   }
 
+  /**
+   * Pushes a credit request to HCM (usually for rollbacks).
+   */
   async creditBalance(
     employeeId: string,
     locationId: string,

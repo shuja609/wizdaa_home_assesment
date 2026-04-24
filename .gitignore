@@ -25,3 +25,9 @@ database.sqlite-journal
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temp and Test files
+scratch/
+coverage/
+.gemini/
+

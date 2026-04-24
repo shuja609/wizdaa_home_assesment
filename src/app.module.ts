@@ -15,12 +15,27 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
+/**
+ * Root Application Module.
+ * Responsible for orchestrating global concerns including:
+ * - Environment Configuration (ConfigModule)
+ * - Persistance (TypeORM with SQLite)
+ * - Security (JWT, Throttling)
+ * - Observability (Pino)
+ * - Scheduling (Cron jobs)
+ * - Internal Event Bus (EventEmitter2)
+ */
 @Module({
   imports: [
+    // 1. Initialize Global Event Bus
     EventEmitterModule.forRoot(),
+
+    // 2. Load Environment Variables
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    // 3. Configure Structured JSON logging
     LoggerModule.forRoot({
       pinoHttp: {
         transport: {
@@ -31,12 +46,16 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         },
       },
     }),
+
+    // 4. Global Rate Limiter
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
         limit: 100,
       },
     ]),
+
+    // 5. Shared JWT Configuration for Authentication
     JwtModule.registerAsync({
       global: true,
       imports: [ConfigModule],
@@ -46,16 +65,22 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       }),
       inject: [ConfigService],
     }),
+
+    // 6. Enable Scheduled Tasks
     ScheduleModule.forRoot(),
+
+    // 7. Core Feature Modules
     BalancesModule,
     RequestsModule,
+
+    // 8. Database Persistence Layer
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'sqlite',
         database: configService.get<string>('DB_FILE', 'database.sqlite'),
         entities: [Balance, TimeOffRequest, SyncLog],
-        synchronize: true, // Only for development; would use migrations for production
+        synchronize: true, // Auto-schema generation (Development mode)
       }),
       inject: [ConfigService],
     }),
@@ -63,6 +88,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
   controllers: [AppController],
   providers: [
     AppService,
+    // Enable Global Throttling across all endpoints by default
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

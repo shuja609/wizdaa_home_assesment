@@ -23,9 +23,8 @@ export class HcmBalanceUpdateDto {
   @IsNumber()
   balance: number;
 
-  @IsString()
-  @IsNotEmpty()
-  hcmVersion: string;
+  @IsNumber()
+  hcmVersion: number;
 }
 
 export class HcmBatchDto {
