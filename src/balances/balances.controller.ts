@@ -9,9 +9,10 @@ import {
 } from '@nestjs/common';
 import { BalancesService } from './balances.service';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('balances')
 export class BalancesController {
   constructor(private readonly balancesService: BalancesService) {}

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsEnum } from 'class-validator';
 
 export class CreateRequestDto {
   @IsString()
@@ -9,7 +9,7 @@ export class CreateRequestDto {
   @IsNotEmpty()
   locationId: string;
 
-  @IsString()
+  @IsEnum(['annual', 'sick'])
   @IsNotEmpty()
   leaveType: string;
 
