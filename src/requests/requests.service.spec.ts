@@ -133,6 +133,34 @@ describe('RequestsService', () => {
         BadRequestException,
       );
     });
+
+    it('should throw BadRequestException if startDate > endDate', async () => {
+      const invalidDto = { ...dto, startDate: '2026-05-01', endDate: '2026-04-01' };
+      await expect(service.createRequest(invalidDto)).rejects.toThrow(
+        'Start date cannot be after end date',
+      );
+    });
+
+    it('should throw BadRequestException if findOne finds nothing', async () => {
+      repo.findOne.mockResolvedValue(null);
+      await expect(service.findOne('non-existent')).rejects.toThrow(
+        'Request not found',
+      );
+    });
+
+    it('should throw BadRequestException when rejecting a non-PENDING request', async () => {
+      repo.findOne.mockResolvedValue({ status: RequestStatus.APPROVED });
+      await expect(service.rejectRequest('r1', 'm1')).rejects.toThrow(
+        /Cannot reject request/,
+      );
+    });
+
+    it('should throw BadRequestException when cancelling a rejected request', async () => {
+      repo.findOne.mockResolvedValue({ status: RequestStatus.REJECTED });
+      await expect(service.cancelRequest('r1')).rejects.toThrow(
+        'Cannot cancel a rejected request',
+      );
+    });
   });
 
   // 3. Edge Test Cases
@@ -166,6 +194,67 @@ describe('RequestsService', () => {
       await expect(service.approveRequest('r1', 'm1')).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it('should handle HCM communication errors during approval', async () => {
+      const request = { id: 'r1', status: RequestStatus.PENDING, days: 2, leaveType: 'annual', employeeId: 'e1', locationId: 'l1' };
+      repo.findOne.mockResolvedValue(request);
+      balancesService.syncBalances.mockResolvedValue([{ leaveType: 'annual', balance: 10 }]);
+      balancesService.debitHcm.mockRejectedValue(new Error('Network Error'));
+
+      await expect(service.approveRequest('r1', 'm1')).rejects.toThrow('Network Error');
+      expect(repo.save).toHaveBeenCalled(); // Should save the error in audit trail
+    });
+
+    it('should handle explicit HCM failure during approval', async () => {
+      const request = { id: 'r1', status: RequestStatus.PENDING, days: 2, leaveType: 'annual', employeeId: 'e1', locationId: 'l1' };
+      repo.findOne.mockResolvedValue(request);
+      balancesService.syncBalances.mockResolvedValue([{ leaveType: 'annual', balance: 10 }]);
+      balancesService.debitHcm.mockResolvedValue({ success: false });
+
+      await expect(service.approveRequest('r1', 'm1')).rejects.toThrow('HCM debit failed at external system');
+    });
+
+    it('should handle HCM communication errors during cancellation rollback', async () => {
+      const request = {
+        id: 'r1',
+        status: RequestStatus.APPROVED,
+        requestedAt: new Date(),
+        employeeId: 'e1',
+        leaveType: 'annual',
+        days: 2,
+        locationId: 'l1',
+      };
+      repo.findOne.mockResolvedValue(request);
+      balancesService.creditHcm.mockRejectedValue(new Error('Rollback Error'));
+
+      const result = await service.cancelRequest('r1');
+      expect(result.status).toBe(RequestStatus.CANCELLED);
+      expect(balancesService.creditHcm).toHaveBeenCalled();
+    });
+
+    it('should log error if HCM credit fails explicitly during cancellation', async () => {
+      const request = {
+        id: 'r1',
+        status: RequestStatus.APPROVED,
+        requestedAt: new Date(),
+        employeeId: 'e1',
+        leaveType: 'annual',
+        days: 2,
+        locationId: 'l1',
+      };
+      repo.findOne.mockResolvedValue(request);
+      balancesService.creditHcm.mockResolvedValue({ success: false });
+
+      const result = await service.cancelRequest('r1');
+      expect(result.status).toBe(RequestStatus.CANCELLED);
+    });
+
+    it('should return immediately if request is already CANCELLED', async () => {
+      const request = { id: 'r1', status: RequestStatus.CANCELLED };
+      repo.findOne.mockResolvedValue(request);
+      const result = await service.cancelRequest('r1');
+      expect(result).toBe(request);
     });
   });
 

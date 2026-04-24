@@ -157,5 +157,58 @@ describe('BalancesService', () => {
       expect(result.updated).toBe(1);
       expect(repo.update).toHaveBeenCalled(); // Should update balance
     });
+
+    it('should create new record if balance does not exist locally during batch update', async () => {
+      const batchDto = {
+        updates: [{ employeeId: 'e2', locationId: 'l1', leaveType: 'annual', balance: 10, hcmVersion: 1 }],
+      };
+      repo.findOne.mockResolvedValue(null);
+
+      const result = await service.processBatchUpdate(batchDto);
+      expect(result.updated).toBe(1);
+      expect(repo.save).toHaveBeenCalled();
+    });
+
+    it('should only update timestamp if no numerical drift in batch update', async () => {
+      const batchDto = {
+        updates: [{ employeeId: 'e1', locationId: 'l1', leaveType: 'annual', balance: 10, hcmVersion: 2 }],
+      };
+      repo.findOne.mockResolvedValue({ employeeId: 'e1', locationId: 'l1', leaveType: 'annual', balance: 10 });
+
+      const result = await service.processBatchUpdate(batchDto);
+      expect(result.updated).toBe(0);
+      expect(repo.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('debitHcm / creditHcm', () => {
+    it('should successfully debit and update local cache', async () => {
+      adapter.debitBalance.mockResolvedValue({ success: true, newBalance: 8 });
+      const result = await service.debitHcm('e1', 'l1', 'annual', 2);
+      expect(result.success).toBe(true);
+      expect(repo.update).toHaveBeenCalled();
+    });
+
+    it('should re-fetch on HCM silence during debit', async () => {
+      adapter.debitBalance.mockResolvedValue({ success: true, newBalance: undefined });
+      adapter.getBalance.mockResolvedValue([{ leaveType: 'annual', balance: 8 }]);
+      
+      const result = await service.debitHcm('e1', 'l1', 'annual', 2);
+      
+      expect(result.success).toBe(true);
+      expect(adapter.getBalance).toHaveBeenCalled();
+      expect(repo.update).toHaveBeenCalled();
+    });
+
+    it('should re-fetch on HCM silence during credit', async () => {
+      adapter.creditBalance.mockResolvedValue({ success: true, newBalance: undefined });
+      adapter.getBalance.mockResolvedValue([{ leaveType: 'annual', balance: 10 }]);
+      
+      const result = await service.creditHcm('e1', 'l1', 'annual', 2);
+      
+      expect(result.success).toBe(true);
+      expect(adapter.getBalance).toHaveBeenCalled();
+      expect(repo.update).toHaveBeenCalled();
+    });
   });
 });

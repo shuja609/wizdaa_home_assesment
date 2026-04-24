@@ -15,6 +15,8 @@ A high-resilience, production-ready microservice for managing employee time-off 
 - **Robust Request Lifecycle**: Full support for submission, manager approval, rejection, and employee-led cancellation with automated grace-period enforcement.
 - **Intelligent HCM Integration**: Real-time balance verification and debit/credit operations with fallback mechanisms for HCM downtime.
 - **Advanced Synchronization**: Scheduled drift detection and large-scale batch ingestion logic to ensure the local cache remains a reliable mirror of the HCM truth.
+
+![Request Lifecycle Flow](./flow.png)
 - **Security First**: 
   - **RBAC**: Strict Role-Based Access Control (Employee vs. Manager).
   - **JWT Auth**: Secure identity verification.
@@ -30,6 +32,8 @@ The service is built on several key design pillars:
 1.  **Anti-Corruption Layer (ACL)**: The `HcmAdapter` isolates the rest of the application from external HCM API changes and network instabilities.
 2.  **Cache-Aside Pattern**: Employee balances are cached locally in SQLite via TypeORM, allowing for high availability even when upstream services are unreachable.
 3.  **Defensive Programming**: Every transaction (Approval/Cancellation) involves a mandatory "Pre-check" against real-time HCM data before persisting local state.
+
+![Architecture Diagram](./architecturediagram.png)
 
 ---
 
@@ -152,6 +156,8 @@ npm run test:e2e
 # Generate Coverage Report
 npm run test:cov
 ```
+
+![Test Coverage Report](./coverage.png)
 
 ### Code Quality Guards
 ```bash
