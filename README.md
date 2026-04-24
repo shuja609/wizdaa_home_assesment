@@ -16,7 +16,7 @@ A high-resilience, production-ready microservice for managing employee time-off 
 - **Intelligent HCM Integration**: Real-time balance verification and debit/credit operations with fallback mechanisms for HCM downtime.
 - **Advanced Synchronization**: Scheduled drift detection and large-scale batch ingestion logic to ensure the local cache remains a reliable mirror of the HCM truth.
 
-![Request Lifecycle Flow](./flow.png)
+![Request Lifecycle Flow](./docs/flow.png)
 - **Security First**: 
   - **RBAC**: Strict Role-Based Access Control (Employee vs. Manager).
   - **JWT Auth**: Secure identity verification.
@@ -33,7 +33,7 @@ The service is built on several key design pillars:
 2.  **Cache-Aside Pattern**: Employee balances are cached locally in SQLite via TypeORM, allowing for high availability even when upstream services are unreachable.
 3.  **Defensive Programming**: Every transaction (Approval/Cancellation) involves a mandatory "Pre-check" against real-time HCM data before persisting local state.
 
-![Architecture Diagram](./architecturediagram.png)
+![Architecture Diagram](./docs/architecturediagram.png)
 
 ---
 
@@ -157,7 +157,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-![Test Coverage Report](./coverage.png)
+![Test Coverage Report](./docs/coverage.png)
 
 ### Code Quality Guards
 ```bash
@@ -189,7 +189,9 @@ npx tsc --noEmit
 
 ## 📄 Documentation & Links
 
-- **[Product Requirements Document (PRD)](file:///e:/Work/shuja/wizdaa_home_assesment/PRD.md)**: Detailed feature specifications.
+- **[Technical Requirements Document (TRD)](./docs/TRD.md)**: Full architectural specification and design rationale.
+  - *Available as: [Markdown](./docs/TRD.md) | [PDF](./docs/TRD.pdf) | [DOCX](./docs/TRD.docx)*
+- **[Product Requirements Document (PRD)](./PRD.md)**: Detailed feature specifications.
 
 
 ---
