@@ -115,13 +115,32 @@ export class BalancesService {
       days,
     );
     if (result.success) {
-      await this.balanceRepository.update(
-        { employeeId, locationId, leaveType },
-        {
-          balance: result.newBalance,
-          lastSyncedAt: new Date(),
-        },
-      );
+      let finalBalance = result.newBalance;
+
+      // F2.2: Defensive behavior on HCM silence
+      // If HCM returns 2xx but no confirmation of new balance, re-fetch after 2s
+      if (finalBalance === undefined) {
+        this.logger.warn(
+          `HCM returned success but no balance confirmation for ${employeeId}. Re-fetching in 2s...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const refetchedTotal = await this.hcmAdapter.getBalance(
+          employeeId,
+          locationId,
+        );
+        const refetched = refetchedTotal.find((b) => b.leaveType === leaveType);
+        finalBalance = refetched?.balance;
+      }
+
+      if (finalBalance !== undefined) {
+        await this.balanceRepository.update(
+          { employeeId, locationId, leaveType },
+          {
+            balance: finalBalance,
+            lastSyncedAt: new Date(),
+          },
+        );
+      }
     }
     return result;
   }
@@ -139,13 +158,31 @@ export class BalancesService {
       days,
     );
     if (result.success) {
-      await this.balanceRepository.update(
-        { employeeId, locationId, leaveType },
-        {
-          balance: result.newBalance,
-          lastSyncedAt: new Date(),
-        },
-      );
+      let finalBalance = result.newBalance;
+
+      // F2.2: Defensive behavior on HCM silence
+      if (finalBalance === undefined) {
+        this.logger.warn(
+          `HCM returned success but no balance confirmation for ${employeeId} on credit. Re-fetching in 2s...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const refetchedTotal = await this.hcmAdapter.getBalance(
+          employeeId,
+          locationId,
+        );
+        const refetched = refetchedTotal.find((b) => b.leaveType === leaveType);
+        finalBalance = refetched?.balance;
+      }
+
+      if (finalBalance !== undefined) {
+        await this.balanceRepository.update(
+          { employeeId, locationId, leaveType },
+          {
+            balance: finalBalance,
+            lastSyncedAt: new Date(),
+          },
+        );
+      }
     }
     return result;
   }

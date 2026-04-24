@@ -5,11 +5,13 @@ import { AuthGuard } from '../common/guards/auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SyncLog } from '../database/entities/sync-log.entity';
+import { TimeOffRequest } from '../database/entities/time-off-request.entity';
 
 describe('SyncController', () => {
   let controller: SyncController;
   let balancesService: any;
   let syncLogRepo: any;
+  let requestRepo: any;
 
   beforeEach(async () => {
     balancesService = {
@@ -17,6 +19,11 @@ describe('SyncController', () => {
     };
     syncLogRepo = {
       find: jest.fn(),
+      findOne: jest.fn(),
+      count: jest.fn(),
+    };
+    requestRepo = {
+      count: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -30,6 +37,10 @@ describe('SyncController', () => {
         {
           provide: getRepositoryToken(SyncLog),
           useValue: syncLogRepo,
+        },
+        {
+          provide: getRepositoryToken(TimeOffRequest),
+          useValue: requestRepo,
         },
       ],
     })
@@ -54,9 +65,15 @@ describe('SyncController', () => {
     });
 
     it('should fetch recent logs safely', async () => {
+      syncLogRepo.findOne.mockResolvedValue({ createdAt: new Date() });
+      syncLogRepo.count.mockResolvedValue(0);
+      requestRepo.count.mockResolvedValue(0);
       syncLogRepo.find.mockResolvedValue([{ id: 1 }]);
+
       const res = await controller.getSyncStatus();
-      expect(res).toEqual({ recentLogs: [{ id: 1 }] });
+      expect(res).toHaveProperty('lastBatchSync');
+      expect(res).toHaveProperty('driftedRecordsSinceLastBatch');
+      expect(res.recentLogs).toEqual([{ id: 1 }]);
     });
   });
 

@@ -50,5 +50,19 @@ describe('RequestsController', () => {
       await controller.approve('r1', 'm1');
       expect(service.approveRequest).toHaveBeenCalledWith('r1', 'm1');
     });
+
+    it('should block employees from viewing others requests', async () => {
+      service.findOne.mockResolvedValue({ employeeId: 'other' });
+      await expect(
+        controller.findOne('r1', { user: { sub: 'me', role: 'employee' } }),
+      ).rejects.toThrow();
+    });
+
+    it('should block employees from cancelling others requests', async () => {
+      service.findOne.mockResolvedValue({ employeeId: 'other' });
+      await expect(
+        controller.cancel('r1', { user: { sub: 'me', role: 'employee' } }),
+      ).rejects.toThrow();
+    });
   });
 });

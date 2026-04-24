@@ -6,6 +6,11 @@ import { Balance } from '../database/entities/balance.entity';
 import { SyncLog, SyncLogType } from '../database/entities/sync-log.entity';
 import { BalancesService } from './balances.service';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  TimeOffRequest,
+  RequestStatus,
+} from '../database/entities/time-off-request.entity';
 
 @Injectable()
 export class SyncService {
@@ -14,10 +19,13 @@ export class SyncService {
   constructor(
     @InjectRepository(Balance)
     private readonly balanceRepository: Repository<Balance>,
+    @InjectRepository(TimeOffRequest)
+    private readonly requestRepository: Repository<TimeOffRequest>,
     @InjectRepository(SyncLog)
     private readonly syncLogRepository: Repository<SyncLog>,
     private readonly balancesService: BalancesService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -30,11 +38,6 @@ export class SyncService {
 
     for (const local of allLocalBalances) {
       try {
-        // Force sync from HCM to get current authoritative state
-        // wait, syncBalances actually overwrites the local balance automatically inside BalancesService.
-        // So calling syncBalances will implicitly correct the drift.
-        // But we want to know IF there was a drift so we can log it.
-        // Let's refactor slightly: we'll fetch from HCM adapter first.
         const hcmBalances = await this.balancesService['hcmAdapter'].getBalance(
           local.employeeId,
           local.locationId,
@@ -44,7 +47,10 @@ export class SyncService {
           (b) => b.leaveType === local.leaveType,
         );
 
-        if (hcmEquivalent && hcmEquivalent.balance !== local.balance) {
+        if (
+          hcmEquivalent &&
+          Math.abs(hcmEquivalent.balance - local.balance) > 0.001
+        ) {
           driftCount++;
           const previousBalance = local.balance;
 
@@ -53,6 +59,31 @@ export class SyncService {
           local.hcmVersion = hcmEquivalent.hcmVersion;
           local.lastSyncedAt = new Date();
           await this.balanceRepository.save(local);
+
+          // F3.2: Emit internal event
+          this.eventEmitter.emit('balance.drift', {
+            employeeId: local.employeeId,
+            locationId: local.locationId,
+            leaveType: local.leaveType,
+            previous: previousBalance,
+            current: local.balance,
+          });
+
+          // F3.2: Alert if PENDING conflicts exist
+          const pendingCount = await this.requestRepository.count({
+            where: {
+              employeeId: local.employeeId,
+              locationId: local.locationId,
+              leaveType: local.leaveType,
+              status: RequestStatus.PENDING,
+            },
+          });
+
+          if (pendingCount > 0) {
+            this.logger.warn(
+              `ALERT: Drift detected on ${local.employeeId} while ${pendingCount} requests are PENDING. Manual review recommended.`,
+            );
+          }
 
           // Log drift exclusively
           await this.syncLogRepository.save(
@@ -66,6 +97,7 @@ export class SyncService {
                 driftAmount: Math.abs(hcmEquivalent.balance - previousBalance),
                 previous: previousBalance,
                 corrected: hcmEquivalent.balance,
+                pendingAffected: pendingCount,
               }),
             }),
           );

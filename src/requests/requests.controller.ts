@@ -56,8 +56,14 @@ export class RequestsController {
 
   @Roles('manager', 'employee')
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.requestsService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    const request = await this.requestsService.findOne(id);
+    if (req.user.role === 'employee' && request.employeeId !== req.user.sub) {
+      throw new ForbiddenException(
+        'Employees can only view their own requests',
+      );
+    }
+    return request;
   }
 
   @Roles('manager')
@@ -74,8 +80,13 @@ export class RequestsController {
 
   @Roles('employee')
   @Patch(':id/cancel')
-  async cancel(@Param('id') id: string) {
-    // In a real app we'd verify the request belongs to req.user.sub
+  async cancel(@Param('id') id: string, @Request() req: any) {
+    const request = await this.requestsService.findOne(id);
+    if (request.employeeId !== req.user.sub) {
+      throw new ForbiddenException(
+        'Cannot cancel a request that does not belong to you',
+      );
+    }
     return this.requestsService.cancelRequest(id);
   }
 }
