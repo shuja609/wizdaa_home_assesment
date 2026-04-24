@@ -81,6 +81,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         database: configService.get<string>('DB_FILE', 'database.sqlite'),
         entities: [Balance, TimeOffRequest, SyncLog],
         synchronize: true, // Auto-schema generation (Development mode)
+        extra: {
+          pragma: 'journal_mode=WAL',
+        },
       }),
       inject: [ConfigService],
     }),

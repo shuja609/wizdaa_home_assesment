@@ -68,6 +68,10 @@ export class HcmAdapter {
         }
       } catch (error: any) {
         this.logger.error(`HCM fetch error for ${type}: ${error.message}`);
+        // PRD: All calls time out in 5s; on timeout, throw HcmUnavailableException
+        if (error.message.includes('timeout')) {
+          throw error;
+        }
         // Partial failures are handled by returning the results collected so far.
       }
     }

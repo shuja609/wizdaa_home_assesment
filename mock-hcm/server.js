@@ -7,21 +7,29 @@ let config = { unreliable: false };
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const randomDelay = () => {
-  const ms = Math.floor(Math.random() * 150) + 50; // 50-200ms
-  return delay(ms);
+const randomDelay = async () => {
+  if (config.hang) {
+    await delay(6000); // Exceeds the 5000ms timeout
+  } else {
+    const ms = Math.floor(Math.random() * 150) + 50; // 50-200ms
+    await delay(ms);
+  }
 };
 
 // Seed initial state
 app.post('/hcm/_reset', (req, res) => {
   balances = {};
   config.unreliable = false;
+  config.hang = false;
   res.sendStatus(200);
 });
 
 app.post('/hcm/_config', (req, res) => {
   if (req.body.unreliable !== undefined) {
     config.unreliable = req.body.unreliable;
+  }
+  if (req.body.hang !== undefined) {
+    config.hang = req.body.hang;
   }
   res.sendStatus(200);
 });

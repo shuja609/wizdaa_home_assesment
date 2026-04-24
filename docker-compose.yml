@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - HCM_API_URL=http://mock-hcm:3001
+      - JWT_SECRET=super-secret-dev-key
+      - HCM_SHARED_SECRET=test-secret
+    depends_on:
+      - mock-hcm
+
+  mock-hcm:
+    build: .
+    command: node mock-hcm/server.js
+    ports:
+      - "3001:3001"
+    environment:
+      - MOCK_HCM_PORT=3001

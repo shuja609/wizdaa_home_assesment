@@ -16,6 +16,8 @@ import {
  * Service managing recurring synchronization tasks and drift detection.
  * Enforces consistency between the microservice's state and the external HCM system.
  */
+import { HcmAdapter } from '../hcm/hcm.adapter';
+
 @Injectable()
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
@@ -28,6 +30,7 @@ export class SyncService {
     @InjectRepository(SyncLog)
     private readonly syncLogRepository: Repository<SyncLog>,
     private readonly balancesService: BalancesService,
+    private readonly hcmAdapter: HcmAdapter,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -48,7 +51,7 @@ export class SyncService {
     for (const local of allLocalBalances) {
       try {
         // Fetch current state from the external HCM adapter.
-        const hcmBalances = await this.balancesService['hcmAdapter'].getBalance(
+        const hcmBalances = await this.hcmAdapter.getBalance(
           local.employeeId,
           local.locationId,
         );

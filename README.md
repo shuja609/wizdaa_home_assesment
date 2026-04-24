@@ -82,6 +82,20 @@ npm run build
 npm run start:prod
 ```
 
+### Manual API Testing
+
+The project is equipped with a `docker-compose.yml` file and a `requests.http` file to make manual testing and verification seamless.
+
+1. **Start the Environment**: Spin up both the Time-Off Microservice and the Mock HCM server simultaneously using Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+2. **Use the REST Client File**: Open the `requests.http` file included in the root directory.
+3. **Execute Requests**: If you use an editor like VSCode, install the [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client). This will allow you to click "Send Request" directly above each predefined HTTP request in the `requests.http` file. The file contains pre-configured flows for:
+   - Creating leave requests
+   - Approving or rejecting requests (Manager flow)
+   - Testing HCM sync webhook endpoints
+
 ### Testing Suite
 We utilize a multi-paradigm testing strategy covering **Functional, Negative, Edge, Boundary, and Validation** cases.
 

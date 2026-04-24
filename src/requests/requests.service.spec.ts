@@ -7,6 +7,7 @@ import {
 } from '../database/entities/time-off-request.entity';
 import { BalancesService } from '../balances/balances.service';
 import { BadRequestException } from '@nestjs/common';
+import { MutexService } from '../common/utils/mutex.service';
 
 describe('RequestsService', () => {
   let service: RequestsService;
@@ -28,6 +29,9 @@ describe('RequestsService', () => {
       debitHcm: jest.fn(),
       creditHcm: jest.fn(),
     };
+    const mutexService = {
+      acquire: jest.fn().mockResolvedValue(jest.fn()),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -39,6 +43,10 @@ describe('RequestsService', () => {
         {
           provide: BalancesService,
           useValue: balancesService,
+        },
+        {
+          provide: MutexService,
+          useValue: mutexService,
         },
       ],
     }).compile();

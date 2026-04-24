@@ -1,0 +1,62 @@
+@baseUrl = http://localhost:3000
+@hcmSecret = test-secret
+
+### 1. Root Check
+GET {{baseUrl}}/
+Authorization: Bearer {{token}}
+
+### 2. Login / Token Simulation
+# NOTE: In this assessment, we use pre-signed tokens for convenience.
+# Employee Token (sub: emp123)
+@empToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlbXAxMjMiLCJyb2xlIjoiZW1wbG95ZWUifQ.some-verify-signature
+# Manager Token (sub: mgr456)
+@mgrToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtZ3I0NTYiLCJyb2xlIjoibWFuYWdlciJ9.some-verify-signature
+
+### 3. Get Balances (Employee)
+GET {{baseUrl}}/balances/emp123/loc1
+Authorization: Bearer {{empToken}}
+
+### 4. Submit Request (Employee)
+POST {{baseUrl}}/requests
+Authorization: Bearer {{empToken}}
+Content-Type: application/json
+
+{
+  "employeeId": "emp123",
+  "locationId": "loc1",
+  "leaveType": "annual",
+  "startDate": "2026-06-01",
+  "endDate": "2026-06-05"
+}
+
+### 5. List Pending Requests (Manager)
+GET {{baseUrl}}/requests?status=PENDING
+Authorization: Bearer {{mgrToken}}
+
+### 6. Approve Request (Manager)
+# Replace {{requestId}} with an actual ID from the list above
+@requestId = CHOOSE_ID_FROM_LIST
+PATCH {{baseUrl}}/requests/{{requestId}}/approve
+Authorization: Bearer {{mgrToken}}
+Content-Type: application/json
+
+{
+  "managerId": "mgr456"
+}
+
+### 7. HCM Batch Sync Simulation (Shared Secret)
+POST {{baseUrl}}/hcm/batch
+x-hcm-secret: {{hcmSecret}}
+Content-Type: application/json
+
+{
+  "updates": [
+    {
+      "employeeId": "emp123",
+      "locationId": "loc1",
+      "leaveType": "annual",
+      "balance": 25,
+      "hcmVersion": "v100"
+    }
+  ]
+}

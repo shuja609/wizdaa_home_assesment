@@ -8,6 +8,7 @@ import { BalancesController } from './balances.controller';
 import { SyncController } from './sync.controller';
 import { SyncService } from './sync.service';
 import { HcmModule } from '../hcm/hcm.module';
+import { MutexService } from '../common/utils/mutex.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { HcmModule } from '../hcm/hcm.module';
     HcmModule,
   ],
   controllers: [BalancesController, SyncController],
-  providers: [BalancesService, SyncService],
-  exports: [BalancesService],
+  providers: [BalancesService, SyncService, MutexService],
+  exports: [BalancesService, MutexService],
 })
 export class BalancesModule {}
